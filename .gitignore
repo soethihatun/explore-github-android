@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Ignore /.idea directory and keep individual files if necessary
+/.idea

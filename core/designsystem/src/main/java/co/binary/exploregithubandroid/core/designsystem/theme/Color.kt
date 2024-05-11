@@ -1,4 +1,4 @@
-package co.binary.exploregithubandroid.ui.theme
+package co.binary.exploregithubandroid.core.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 

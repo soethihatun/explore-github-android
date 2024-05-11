@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import co.binary.exploregithubandroid.ui.theme.ExploreGitHubAndroidTheme
+import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

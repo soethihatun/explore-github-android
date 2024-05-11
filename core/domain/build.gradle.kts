@@ -10,6 +10,7 @@ java {
 
 dependencies {
     implementation(project(":core:model"))
+    implementation(project(":core:repository"))
 
     implementation(libs.java.inject)
 }

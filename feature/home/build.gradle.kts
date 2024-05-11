@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -27,6 +29,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
+    }
 }
 
 dependencies {
@@ -36,6 +44,11 @@ dependencies {
     implementation(project(":core:model"))
 
     implementation(libs.androidx.core.ktx)
+
+    implementation(libs.navigation.compose)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

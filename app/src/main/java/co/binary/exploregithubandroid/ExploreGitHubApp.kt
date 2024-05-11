@@ -1,12 +1,13 @@
 package co.binary.exploregithubandroid
 
-import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 
-@HiltAndroidApp
-class ExploreGitHubApp: Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-    }
+@Composable
+internal fun ExploreGitHubApp(modifier: Modifier = Modifier) {
+    ExploreGitHubNavHost(
+        modifier = modifier,
+        navController = rememberNavController(),
+    )
 }

@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "Explore GitHub Android"
 include(":app")
 include(":core:designsystem")
+include(":core:model")

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -16,7 +18,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -26,6 +28,23 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    // Load secrets.properties file
+    val properties = Properties().apply {
+        load(File("secrets.properties").inputStream())
+    }
+
+    val accessToken = properties.getProperty("GITHUB_ACCESS_TOKEN")
+    val githubBaseUrl = properties.getProperty("GITHUB_BASE_URL")
+
+    buildTypes.forEach {
+        it.buildConfigField("String", "GITHUB_ACCESS_TOKEN", accessToken)
+        it.buildConfigField("String", "GITHUB_BASE_URL", githubBaseUrl)
     }
 }
 

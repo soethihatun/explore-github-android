@@ -3,6 +3,9 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("kotlinx-serialization")
+    alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -56,6 +59,9 @@ dependencies {
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
 }

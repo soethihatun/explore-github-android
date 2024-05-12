@@ -4,6 +4,7 @@ data class GitHubUser(
     val id: Int,
     val login: String,
     val avatarUrl: String,
+    // FIXME: delete later
     val name: String,
 )
 

@@ -2,14 +2,14 @@ package co.binary.exploregithubandroid.core.model
 
 data class GitHubUser(
     val id: Int,
-    val login: String,
+    val username: String,
     val avatarUrl: String,
 )
 
 // TODO: delete later
 val dummyUser = GitHubUser(
     id = 1,
-    login = "johndoe",
+    username = "johndoe",
     avatarUrl = "https://avatars.githubusercontent.com/u/878437?s=200&v=4",
 )
 

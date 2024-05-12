@@ -1,5 +1,6 @@
 package co.binary.exploregithubandroid.feature.home.user
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,16 +35,17 @@ internal class GitHubUserDetailViewModel @Inject constructor(
     val uiState: StateFlow<GitHubUserDetailUiState> = _uiState.asStateFlow()
 
     init {
-        getGitHubUserDetail(login = args.login)
+        getGitHubUserDetail(username = args.username)
     }
 
-    fun getGitHubUserDetail(login: String) {
+    fun getGitHubUserDetail(username: String) {
         viewModelScope.launch {
-            getGitHubUserDetailUseCase(login).fold(
+            getGitHubUserDetailUseCase(username).fold(
                 onSuccess = {
                     GitHubUserDetailUiState.Success(it)
                 },
                 onFailure = {
+                    Log.e(TAG, "getGitHubUserDetail: ", it)
                     GitHubUserDetailUiState.Error
                 }
             ).let { newState ->

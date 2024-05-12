@@ -17,7 +17,7 @@ sealed interface SearchGitHubUsersUiState {
     data object Initial : SearchGitHubUsersUiState
     data object Loading : SearchGitHubUsersUiState
     data class Success(val users: List<GitHubUser>) : SearchGitHubUsersUiState
-    data object Empty: SearchGitHubUsersUiState
+    data object Empty : SearchGitHubUsersUiState
     data object Error : SearchGitHubUsersUiState
 }
 
@@ -26,7 +26,7 @@ private const val TAG = "SearchGitHubUserViewModel"
 @HiltViewModel
 internal class SearchGitHubUserViewModel @Inject constructor(
     private val searchGitHubUserUseCase: SearchGitHubUsersUseCase,
-): ViewModel() {
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SearchGitHubUsersUiState>(SearchGitHubUsersUiState.Initial)
     val uiState: StateFlow<SearchGitHubUsersUiState> = _uiState.asStateFlow()
@@ -37,6 +37,7 @@ internal class SearchGitHubUserViewModel @Inject constructor(
 
     fun search(query: String) {
         viewModelScope.launch {
+            _uiState.update { SearchGitHubUsersUiState.Loading }
             searchGitHubUserUseCase(query).fold(
                 onSuccess = {
                     Log.d(TAG, "search: success")

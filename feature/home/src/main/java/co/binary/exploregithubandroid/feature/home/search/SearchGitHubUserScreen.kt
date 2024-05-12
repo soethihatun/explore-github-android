@@ -40,7 +40,7 @@ import coil.compose.AsyncImage
 internal fun SearchGitHubUserRoute(
     modifier: Modifier = Modifier,
     viewModel: SearchGitHubUserViewModel = hiltViewModel(),
-    goToUserDetail: (login: String) -> Unit,
+    goToUserDetail: (username: String) -> Unit,
 ) {
     // Collect the UI state in a life cycle aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -56,7 +56,7 @@ internal fun SearchGitHubUserRoute(
 private fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
     uiState: SearchGitHubUsersUiState,
-    onUserClick: (login: String) -> Unit,
+    onUserClick: (username: String) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         // TODO: Add search box
@@ -96,7 +96,7 @@ private fun SearchGitHubUserScreen(
 private fun UserList(
     modifier: Modifier = Modifier,
     users: List<GitHubUser>,
-    onUserClick: (login: String) -> Unit,
+    onUserClick: (username: String) -> Unit,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -114,7 +114,7 @@ private fun UserList(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onUserClick(user.login) }
+                    .clickable { onUserClick(user.username) }
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 AsyncImage(
@@ -127,7 +127,7 @@ private fun UserList(
                         .clip(CircleShape),
                 )
 
-                Text(user.login, style = MaterialTheme.typography.bodyLarge)
+                Text(user.username, style = MaterialTheme.typography.bodyLarge)
             }
         }
     }

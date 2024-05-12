@@ -64,7 +64,7 @@ internal fun GitHubUserDetailRoute(
 
 @Composable
 private fun GitHubUserDetailScreen(modifier: Modifier = Modifier, uiState: GitHubUserDetailUiState) {
-    Column(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when (uiState) {
             GitHubUserDetailUiState.Error -> {
                 Text("Something went wrong. Please try again.", style = MaterialTheme.typography.bodyLarge)
@@ -86,9 +86,11 @@ private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubU
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -105,13 +107,20 @@ private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubU
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(user.name, style = MaterialTheme.typography.titleLarge)
+                    Text(user.username, style = MaterialTheme.typography.titleLarge)
 
-                    Text(user.login, style = MaterialTheme.typography.titleMedium)
+                    user.name?.let {
+                        Text(user.username, style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
 
-            Row(modifier = Modifier.height(IntrinsicSize.Min).padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .height(IntrinsicSize.Min)
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(Icons.Default.Person, contentDescription = "followers & following users")
 
                 Spacer(modifier = Modifier.width(8.dp))

@@ -13,20 +13,20 @@ object HomeNavigation {
     const val GRAPH_ROUTE = "home_graph_route"
     const val ROUTE = "home_route"
 
-    const val USER_DETAIL_ROUTE = "$ROUTE/{${UserDetailNavigationArgs.LOGIN}}"
-    fun userDetailRoute(login: String) = "$ROUTE/$login"
+    const val USER_DETAIL_ROUTE = "$ROUTE/{${UserDetailNavigationArgs.USERNAME}}"
+    fun userDetailRoute(username: String) = "$ROUTE/$username"
 }
 
 object UserDetailNavigationArgs {
-    const val LOGIN = "login"
+    const val USERNAME = "username"
 }
 
-internal class UserDetailArgs(val login: String) {
+internal class UserDetailArgs(val username: String) {
     constructor(savedStateHandle: SavedStateHandle) :
-            this(login = checkNotNull(savedStateHandle[UserDetailNavigationArgs.LOGIN]))
+            this(username = checkNotNull(savedStateHandle[UserDetailNavigationArgs.USERNAME]))
 }
 
-fun NavGraphBuilder.homeNavGraph(navigateToUserDetail: (login: String) -> Unit) {
+fun NavGraphBuilder.homeNavGraph(navigateToUserDetail: (username: String) -> Unit) {
     navigation(
         route = HomeNavigation.GRAPH_ROUTE,
         startDestination = HomeNavigation.ROUTE
@@ -38,7 +38,7 @@ fun NavGraphBuilder.homeNavGraph(navigateToUserDetail: (login: String) -> Unit) 
 }
 
 private fun NavGraphBuilder.homeScreen(
-    goToUserDetail: (login: String) -> Unit,
+    goToUserDetail: (username: String) -> Unit,
 ) {
     composable(route = HomeNavigation.ROUTE) {
         SearchGitHubUserRoute(goToUserDetail = goToUserDetail)
@@ -51,4 +51,4 @@ private fun NavGraphBuilder.userDetailScreen() {
     }
 }
 
-fun NavController.navigateToUserDetail(login: String) = navigate(userDetailRoute(login))
+fun NavController.navigateToUserDetail(username: String) = navigate(userDetailRoute(username))

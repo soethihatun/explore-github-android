@@ -1,8 +1,10 @@
 package co.binary.exploregithubandroid.core.data.mapper
 
+import co.binary.exploregithubandroid.core.model.GitHubRepo
 import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.GitHubUserDetail
 import co.binary.exploregithubandroid.core.network.model.GitHubUserDetailResponse
+import co.binary.exploregithubandroid.core.network.model.GitHubUserRepoResponse
 import co.binary.exploregithubandroid.core.network.model.SearchGitHubUserItemResponse
 import co.binary.exploregithubandroid.core.network.model.SearchGitHubUserResponse
 
@@ -16,7 +18,7 @@ internal fun SearchGitHubUserItemResponse.asExternalModel(): GitHubUser =
         avatarUrl = avatarUrl,
     )
 
-internal fun GitHubUserDetailResponse.asExternalModel(): GitHubUserDetail =
+internal fun GitHubUserDetailResponse.asExternalModel(repos: List<GitHubRepo>): GitHubUserDetail =
     GitHubUserDetail(
         id = id,
         username = login,
@@ -24,5 +26,14 @@ internal fun GitHubUserDetailResponse.asExternalModel(): GitHubUserDetail =
         name = name,
         followers = followers,
         following = following,
-        repos = emptyList(),
+        repos = repos,
     )
+
+internal fun GitHubUserRepoResponse.asExternalModel(): GitHubRepo = GitHubRepo(
+    id = id,
+    name = name,
+    description = description,
+    stargazersCount = stargazersCount,
+    primaryLanguage = language,
+    url = url,
+)

@@ -1,6 +1,7 @@
 package co.binary.exploregithubandroid.core.network.service
 
 import co.binary.exploregithubandroid.core.network.model.GitHubUserDetailResponse
+import co.binary.exploregithubandroid.core.network.model.GitHubUserRepoResponse
 import co.binary.exploregithubandroid.core.network.model.SearchGitHubUserResponse
 import retrofit2.Response
 import retrofit2.http.GET
@@ -20,4 +21,10 @@ interface GitHubService {
         @Header("Authorization") accessToken: String,
         @Path("username") username: String,
     ): Response<GitHubUserDetailResponse>
+
+    @GET("users/{username}/repos")
+    suspend fun getUserRepos(
+        @Header("Authorization") accessToken: String,
+        @Path("username") username: String,
+    ): Response<List<GitHubUserRepoResponse>>
 }

@@ -161,11 +161,13 @@ private fun UserRepositoryList(modifier: Modifier = Modifier, repos: List<GitHub
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(repo.name, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    repo.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+                repo.description?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
                 Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -177,16 +179,18 @@ private fun UserRepositoryList(modifier: Modifier = Modifier, repos: List<GitHub
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(Color.Yellow, CircleShape)
-                        )
-                        Text(repo.primaryLanguage, style = MaterialTheme.typography.bodyMedium)
+                    repo.primaryLanguage?.let {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Color.Yellow, CircleShape)
+                            )
+                            Text(it, style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }

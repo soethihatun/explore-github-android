@@ -52,10 +52,15 @@ android {
 dependencies {
 
     implementation(project(":core:designsystem"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:data"))
+
     implementation(project(":feature:home"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewModel.compose)
     implementation(libs.androidx.activity.compose)
 
     implementation(libs.navigation.compose)

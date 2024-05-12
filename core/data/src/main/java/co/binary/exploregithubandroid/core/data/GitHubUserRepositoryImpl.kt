@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 internal class GitHubUserRepositoryImpl @Inject constructor() : GitHubUserRepository {
     override suspend fun searchGitHubUsers(query: String): Result<List<GitHubUser>> {
-        return Result.success(emptyList())
+        return Result.success(listOf(GitHubUser(id = 1, login = "johndoe", avatarUrl = "avatarUrl", name = "John Doe")))
     }
 
     override suspend fun getGitHubUserDetail(login: String): Result<GitHubUserDetail> {

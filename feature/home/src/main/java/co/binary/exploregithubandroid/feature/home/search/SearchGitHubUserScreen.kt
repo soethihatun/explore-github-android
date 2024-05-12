@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.dummyUser
+import co.binary.exploregithubandroid.core.model.dummyUsers
 import coil.compose.AsyncImage
 
 @Composable
@@ -98,8 +100,7 @@ private fun UserList(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(vertical = 16.dp),
     ) {
         items(
             users,
@@ -112,7 +113,8 @@ private fun UserList(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onUserClick(user.login) },
+                    .clickable { onUserClick(user.login) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 AsyncImage(
                     model = user.avatarUrl,
@@ -120,7 +122,7 @@ private fun UserList(
                     // FIXME: Fix placeholder
                     placeholder = rememberVectorPainter(image = Icons.Default.Person),
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(56.dp)
                         .clip(CircleShape),
                 )
 
@@ -147,7 +149,7 @@ private fun UserListPreview() {
 
 private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUsersUiState> {
     override val values: Sequence<SearchGitHubUsersUiState> = sequenceOf(
-        SearchGitHubUsersUiState.Success(users = listOf(dummyUser)),
+        SearchGitHubUsersUiState.Success(users = dummyUsers),
         SearchGitHubUsersUiState.Initial,
         SearchGitHubUsersUiState.Empty,
         SearchGitHubUsersUiState.Error,

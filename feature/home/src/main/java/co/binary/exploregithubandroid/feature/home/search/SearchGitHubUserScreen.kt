@@ -31,12 +31,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubUser
+import co.binary.exploregithubandroid.core.model.dummyUser
 import coil.compose.AsyncImage
 
 @Composable
 internal fun SearchGitHubUserRoute(
     modifier: Modifier = Modifier,
     viewModel: SearchGitHubUserViewModel = hiltViewModel(),
+    goToUserDetail: (login: String) -> Unit,
 ) {
     // Collect the UI state in a life cycle aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -44,14 +46,14 @@ internal fun SearchGitHubUserRoute(
     SearchGitHubUserScreen(
         modifier = modifier,
         uiState = uiState,
-        onUserClick = {},
+        onUserClick = goToUserDetail,
     )
 }
 
 @Composable
 private fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
-    uiState: SearchUserUiState,
+    uiState: SearchGitHubUsersUiState,
     onUserClick: (login: String) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -64,23 +66,23 @@ private fun SearchGitHubUserScreen(
                 .fillMaxSize(), contentAlignment = Alignment.Center
         ) {
             when (uiState) {
-                SearchUserUiState.Initial -> {
+                SearchGitHubUsersUiState.Initial -> {
                     Text("Search and explore GitHub users", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                SearchUserUiState.Empty -> {
+                SearchGitHubUsersUiState.Empty -> {
                     Text("No users found", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                SearchUserUiState.Error -> {
+                SearchGitHubUsersUiState.Error -> {
                     Text("Something went wrong. Please try again.", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                SearchUserUiState.Loading -> {
+                SearchGitHubUsersUiState.Loading -> {
                     CircularProgressIndicator()
                 }
 
-                is SearchUserUiState.Success -> {
+                is SearchGitHubUsersUiState.Success -> {
                     UserList(users = uiState.users, onUserClick = onUserClick)
                 }
             }
@@ -132,8 +134,6 @@ private fun UserList(
     }
 }
 
-private val dummyUser = GitHubUser(id = 1, login = "johndoe", avatarUrl = "avatarUrl", name = "John Doe")
-
 @Preview
 @Composable
 private fun UserListPreview() {
@@ -145,19 +145,19 @@ private fun UserListPreview() {
     }
 }
 
-private class SearchUserUiStateProvider : PreviewParameterProvider<SearchUserUiState> {
-    override val values: Sequence<SearchUserUiState> = sequenceOf(
-        SearchUserUiState.Initial,
-        SearchUserUiState.Empty,
-        SearchUserUiState.Error,
-        SearchUserUiState.Loading,
-        SearchUserUiState.Success(users = listOf(dummyUser))
+private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUsersUiState> {
+    override val values: Sequence<SearchGitHubUsersUiState> = sequenceOf(
+        SearchGitHubUsersUiState.Success(users = listOf(dummyUser)),
+        SearchGitHubUsersUiState.Initial,
+        SearchGitHubUsersUiState.Empty,
+        SearchGitHubUsersUiState.Error,
+        SearchGitHubUsersUiState.Loading,
     )
 }
 
 @Preview
 @Composable
-private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchUserUiStateProvider::class) uiState: SearchUserUiState) {
+private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiStateProvider::class) uiState: SearchGitHubUsersUiState) {
     ExploreGitHubAndroidTheme {
         SearchGitHubUserScreen(
             uiState = uiState,

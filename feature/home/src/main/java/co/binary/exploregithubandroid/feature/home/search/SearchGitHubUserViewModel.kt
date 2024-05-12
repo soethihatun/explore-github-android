@@ -13,12 +13,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed interface SearchUserUiState {
-    data object Initial : SearchUserUiState
-    data object Loading : SearchUserUiState
-    data class Success(val users: List<GitHubUser>) : SearchUserUiState
-    data object Empty: SearchUserUiState
-    data object Error : SearchUserUiState
+sealed interface SearchGitHubUsersUiState {
+    data object Initial : SearchGitHubUsersUiState
+    data object Loading : SearchGitHubUsersUiState
+    data class Success(val users: List<GitHubUser>) : SearchGitHubUsersUiState
+    data object Empty: SearchGitHubUsersUiState
+    data object Error : SearchGitHubUsersUiState
 }
 
 private const val TAG = "SearchGitHubUserViewModel"
@@ -28,8 +28,8 @@ internal class SearchGitHubUserViewModel @Inject constructor(
     private val searchGitHubUserUseCase: SearchGitHubUsersUseCase,
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow<SearchUserUiState>(SearchUserUiState.Initial)
-    val uiState: StateFlow<SearchUserUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<SearchGitHubUsersUiState>(SearchGitHubUsersUiState.Initial)
+    val uiState: StateFlow<SearchGitHubUsersUiState> = _uiState.asStateFlow()
 
     init {
         search("johndoe")
@@ -41,14 +41,14 @@ internal class SearchGitHubUserViewModel @Inject constructor(
                 onSuccess = {
                     Log.d(TAG, "search: success")
                     if (it.isEmpty()) {
-                        SearchUserUiState.Empty
+                        SearchGitHubUsersUiState.Empty
                     } else {
-                        SearchUserUiState.Success(it)
+                        SearchGitHubUsersUiState.Success(it)
                     }
                 },
                 onFailure = {
                     Log.d(TAG, "search: error")
-                    SearchUserUiState.Error
+                    SearchGitHubUsersUiState.Error
                 }
             ).let { newState ->
                 _uiState.update { newState }

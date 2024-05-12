@@ -19,7 +19,7 @@ internal class GitHubUserRepositoryImpl @Inject constructor() : GitHubUserReposi
                 name = "Test",
                 followers = 1,
                 following = 1,
-                repositories = emptyList(),
+                repos = emptyList(),
             )
         )
     }

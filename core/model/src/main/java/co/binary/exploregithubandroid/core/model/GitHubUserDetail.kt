@@ -7,5 +7,16 @@ data class GitHubUserDetail(
     val name: String,
     val followers: Int,
     val following: Int,
-    val repositories: List<GitHubRepository>
+    val repos: List<GitHubRepository>
+)
+
+// TODO: delete later
+val dummyUserDetail = GitHubUserDetail(
+    id = 1,
+    login = "test",
+    avatarUrl = "",
+    name = "Test",
+    followers = 1,
+    following = 1,
+    repos = emptyList(),
 )

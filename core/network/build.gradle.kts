@@ -1,12 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.dagger.hilt)
-    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "co.binary.exploregithubandroid.core.data"
+    namespace = "co.binary.exploregithubandroid.core.network"
     compileSdk = 34
 
     defaultConfig {
@@ -32,13 +30,5 @@ android {
 }
 
 dependencies {
-
-    implementation(project(":core:model"))
-    implementation(project(":core:repository"))
-    implementation(project(":core:network"))
-
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-
     testImplementation(libs.junit)
 }

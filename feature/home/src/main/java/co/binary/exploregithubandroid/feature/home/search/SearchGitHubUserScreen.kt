@@ -110,7 +110,8 @@ private fun UserList(
             },
         ) { user ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onUserClick(user.login) }
@@ -126,11 +127,7 @@ private fun UserList(
                         .clip(CircleShape),
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(user.name, style = MaterialTheme.typography.bodyLarge)
-
-                    Text(user.login, style = MaterialTheme.typography.bodyMedium)
-                }
+                Text(user.login, style = MaterialTheme.typography.bodyLarge)
             }
         }
     }

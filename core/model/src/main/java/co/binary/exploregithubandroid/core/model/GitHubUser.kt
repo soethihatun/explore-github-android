@@ -4,8 +4,6 @@ data class GitHubUser(
     val id: Int,
     val login: String,
     val avatarUrl: String,
-    // FIXME: delete later
-    val name: String,
 )
 
 // TODO: delete later
@@ -13,7 +11,6 @@ val dummyUser = GitHubUser(
     id = 1,
     login = "johndoe",
     avatarUrl = "https://avatars.githubusercontent.com/u/878437?s=200&v=4",
-    name = "John Doe"
 )
 
 val dummyUsers = listOf(

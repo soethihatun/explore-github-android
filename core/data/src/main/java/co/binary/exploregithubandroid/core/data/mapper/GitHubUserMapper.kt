@@ -12,5 +12,4 @@ internal fun SearchGitHubUserItemResponse.asExternalModel(): GitHubUser =
         id = id,
         login = login,
         avatarUrl = avatarUrl,
-        name = ""
     )

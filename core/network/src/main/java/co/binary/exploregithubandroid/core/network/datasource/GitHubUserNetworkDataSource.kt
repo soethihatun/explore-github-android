@@ -9,5 +9,5 @@ interface GitHubUserNetworkDataSource {
 
     suspend fun getUserDetail(username: String): Result<GitHubUserDetailResponse>
 
-    suspend fun getUserRepos(username: String): Result<List<GitHubUserRepoResponse>>
+    suspend fun getUserRepos(username: String, page: Int): Result<List<GitHubUserRepoResponse>>
 }

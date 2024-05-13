@@ -27,5 +27,6 @@ interface GitHubService {
     suspend fun getUserRepos(
         @Header("Authorization") accessToken: String,
         @Path("username") username: String,
+        @Query("page") page: Int,
     ): Response<List<GitHubUserRepoResponse>>
 }

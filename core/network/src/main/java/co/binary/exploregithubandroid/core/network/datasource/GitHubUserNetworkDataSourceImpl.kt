@@ -21,7 +21,7 @@ internal class GitHubUserNetworkDataSourceImpl @Inject constructor(
         return getResult { service.getUserDetail(accessToken = accessToken, username = username) }
     }
 
-    override suspend fun getUserRepos(username: String): Result<List<GitHubUserRepoResponse>> {
-        return getResult { service.getUserRepos(accessToken = accessToken, username = username) }
+    override suspend fun getUserRepos(username: String, page: Int): Result<List<GitHubUserRepoResponse>> {
+        return getResult { service.getUserRepos(accessToken = accessToken, username = username, page = page) }
     }
 }

@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetGitHubUserDetailUseCase @Inject constructor(
     private val repository: GitHubUserRepository,
 ) {
-    suspend operator fun invoke(username: String): Result<GitHubUserDetail> {
-        return repository.getGitHubUserDetail(username)
+    suspend operator fun invoke(username: String, page: Int): Result<GitHubUserDetail> {
+        return repository.getGitHubUserDetail(username, page)
     }
 }

@@ -240,7 +240,7 @@ private fun UserRepositoryListPreview() {
 
 private class GitHubUserDetailUiStateProvider : PreviewParameterProvider<GitHubUserDetailUiState> {
     override val values: Sequence<GitHubUserDetailUiState> = sequenceOf(
-        GitHubUserDetailUiState.Success(dummyUserDetail),
+        GitHubUserDetailUiState.Success(dummyUserDetail, 1),
         GitHubUserDetailUiState.Loading,
         GitHubUserDetailUiState.Error,
     )

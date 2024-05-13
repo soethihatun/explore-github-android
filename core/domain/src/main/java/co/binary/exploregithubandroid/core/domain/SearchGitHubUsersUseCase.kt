@@ -7,7 +7,7 @@ import javax.inject.Inject
 class SearchGitHubUsersUseCase @Inject constructor(
     private val repository: GitHubUserRepository,
 ) {
-    suspend operator fun invoke(query: String): Result<List<GitHubUser>> {
-        return repository.searchGitHubUsers(query)
+    suspend operator fun invoke(query: String, page: Int): Result<List<GitHubUser>> {
+        return repository.searchGitHubUsers(query = query, page = page)
     }
 }

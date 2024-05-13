@@ -14,6 +14,7 @@ interface GitHubService {
     suspend fun searchUsers(
         @Header("Authorization") accessToken: String,
         @Query("q") query: String,
+        @Query("page") page: Int,
     ): Response<SearchGitHubUserResponse>
 
     @GET("users/{username}")

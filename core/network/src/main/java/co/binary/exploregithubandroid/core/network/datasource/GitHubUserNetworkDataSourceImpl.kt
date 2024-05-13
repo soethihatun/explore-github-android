@@ -13,8 +13,8 @@ internal class GitHubUserNetworkDataSourceImpl @Inject constructor(
     private val service: GitHubService,
     // TODO: Add dispatcher later
 ) : GitHubUserNetworkDataSource {
-    override suspend fun searchUsers(query: String): Result<SearchGitHubUserResponse> {
-        return getResult { service.searchUsers(accessToken = accessToken, query = query) }
+    override suspend fun searchUsers(query: String, page: Int): Result<SearchGitHubUserResponse> {
+        return getResult { service.searchUsers(accessToken = accessToken, query = query, page = page) }
     }
 
     override suspend fun getUserDetail(username: String): Result<GitHubUserDetailResponse> {

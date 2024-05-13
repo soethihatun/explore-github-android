@@ -12,8 +12,8 @@ import javax.inject.Inject
 internal class GitHubUserRepositoryImpl @Inject constructor(
     private val network: GitHubUserNetworkDataSource,
 ) : GitHubUserRepository {
-    override suspend fun searchGitHubUsers(query: String): Result<List<GitHubUser>> {
-        return network.searchUsers(query).map { it.asExternalModel() }
+    override suspend fun searchGitHubUsers(query: String, page: Int): Result<List<GitHubUser>> {
+        return network.searchUsers(query = query, page = page).map { it.asExternalModel() }
     }
 
     override suspend fun getGitHubUserDetail(username: String): Result<GitHubUserDetail> = coroutineScope {

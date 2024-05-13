@@ -34,11 +34,14 @@ internal class SearchGitHubUserViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<SearchGitHubUsersUiState>(SearchGitHubUsersUiState.Initial)
     val uiState: StateFlow<SearchGitHubUsersUiState> = _uiState.asStateFlow()
 
-    fun search(query: String) {
+    private var page = 0
+
+    fun search(query: String, page: Int) {
         viewModelScope.launch {
             _uiState.update { SearchGitHubUsersUiState.Loading }
-            searchGitHubUserUseCase(query).fold(
+            searchGitHubUserUseCase(query, page).fold(
                 onSuccess = {
+                    // TODO: Handle load more error
                     Log.d(TAG, "search: success")
                     if (it.isEmpty()) {
                         SearchGitHubUsersUiState.Empty
@@ -54,6 +57,11 @@ internal class SearchGitHubUserViewModel @Inject constructor(
                 _uiState.update { newState }
             }
         }
+    }
+
+    fun loadMore() {
+        page++
+        search(query = searchText.value, page = page)
     }
 
     fun updateSearchText(text: String) {

@@ -4,7 +4,7 @@ import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.GitHubUserDetail
 
 interface GitHubUserRepository {
-    suspend fun searchGitHubUsers(query: String): Result<List<GitHubUser>>
+    suspend fun searchGitHubUsers(query: String, page: Int): Result<List<GitHubUser>>
 
     suspend fun getGitHubUserDetail(username: String): Result<GitHubUserDetail>
 }

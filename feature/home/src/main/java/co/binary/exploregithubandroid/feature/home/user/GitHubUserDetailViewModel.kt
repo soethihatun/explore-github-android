@@ -18,7 +18,13 @@ import javax.inject.Inject
 
 sealed interface GitHubUserDetailUiState {
     data object Loading : GitHubUserDetailUiState
-    data class Success(val user: GitHubUserDetail, val page: Int) : GitHubUserDetailUiState
+    data class Success(
+        val user: GitHubUserDetail,
+        val page: Int,
+        val loadingMore: Boolean = false,
+        val allLoaded: Boolean = false,
+    ) : GitHubUserDetailUiState
+
     data object Error : GitHubUserDetailUiState
 }
 
@@ -59,12 +65,17 @@ internal class GitHubUserDetailViewModel @Inject constructor(
 
     fun loadMore() {
         val state = (uiState.value as? GitHubUserDetailUiState.Success) ?: return
+        _uiState.update { state.copy(loadingMore = true) }
         viewModelScope.launch {
             val newPage = state.page + 1
             getGitHubUserReposUseCase(username = args.username, page = newPage).fold(
                 onSuccess = { newData ->
-                    val user = state.user.copy(repos = state.user.repos + newData)
-                    state.copy(user = user, page = newPage)
+                    if (newData.isEmpty()) {
+                        state.copy(allLoaded = true)
+                    } else {
+                        val user = state.user.copy(repos = state.user.repos + newData)
+                        state.copy(user = user, page = newPage)
+                    }
                 },
                 onFailure = {
                     // FIXME: handle error

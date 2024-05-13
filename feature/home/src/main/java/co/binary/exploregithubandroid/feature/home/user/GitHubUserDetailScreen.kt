@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -15,8 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.designsystem.DevicePreview
+import co.binary.exploregithubandroid.core.designsystem.EndlessLazyColumn
 import co.binary.exploregithubandroid.core.designsystem.ExploreGitHubTopAppBar
 import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubRepo
@@ -52,6 +52,7 @@ import co.binary.exploregithubandroid.core.model.GitHubUserDetail
 import co.binary.exploregithubandroid.core.model.dummyRepos
 import co.binary.exploregithubandroid.core.model.dummyUserDetail
 import co.binary.exploregithubandroid.feature.home.R
+import co.binary.exploregithubandroid.feature.home.search.LoadingItem
 import coil.compose.AsyncImage
 
 @Composable
@@ -67,6 +68,7 @@ internal fun GitHubUserDetailRoute(
         modifier = modifier,
         uiState = uiState,
         onBackClick = onBackClick,
+        loadMore = viewModel::loadMore
     )
 }
 
@@ -76,6 +78,7 @@ private fun GitHubUserDetailScreen(
     modifier: Modifier = Modifier,
     uiState: GitHubUserDetailUiState,
     onBackClick: () -> Unit,
+    loadMore: () -> Unit
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         ExploreGitHubTopAppBar(
@@ -96,7 +99,12 @@ private fun GitHubUserDetailScreen(
                 }
 
                 is GitHubUserDetailUiState.Success -> {
-                    GitHubUserDetailContent(user = uiState.user)
+                    GitHubUserDetailContent(
+                        user = uiState.user,
+                        loadingMore = uiState.loadingMore,
+                        allLoaded = uiState.allLoaded,
+                        loadMore = loadMore,
+                    )
                 }
             }
         }
@@ -104,7 +112,13 @@ private fun GitHubUserDetailScreen(
 }
 
 @Composable
-private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubUserDetail) {
+private fun GitHubUserDetailContent(
+    modifier: Modifier = Modifier,
+    user: GitHubUserDetail,
+    loadingMore: Boolean,
+    allLoaded: Boolean,
+    loadMore: () -> Unit
+) {
     Column(
         modifier = modifier.fillMaxSize()
     ) {
@@ -174,57 +188,78 @@ private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubU
             }
         }
 
-        UserRepositoryList(repos = user.repos)
+        UserRepoList(repos = user.repos, loadingMore = loadingMore, loadMore = loadMore, allLoaded = allLoaded)
     }
 }
 
 @Composable
-private fun UserRepositoryList(modifier: Modifier = Modifier, repos: List<GitHubRepo>) {
-    LazyColumn(modifier = modifier) {
-        itemsIndexed(items = repos, key = { _, repo -> repo.id }) { index, repo ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+private fun UserRepoList(
+    modifier: Modifier = Modifier,
+    repos: List<GitHubRepo>,
+    loadingMore: Boolean,
+    allLoaded: Boolean,
+    loadMore: () -> Unit
+) {
+    EndlessLazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp),
+        enabled = !allLoaded,
+        listState = rememberLazyListState(),
+        items = repos,
+        itemKey = { repo ->
+            // Use the ID as the unique and stable key
+            repo.id
+        },
+        itemContent = { repo ->
+            UserRepoItem(repo)
+        },
+        loading = loadingMore,
+        loadingItem = {
+            LoadingItem()
+        },
+        loadMore = loadMore,
+    )
+}
+
+@Composable
+private fun UserRepoItem(repo: GitHubRepo) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { }
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(repo.name, style = MaterialTheme.typography.bodyLarge)
+        repo.description?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(repo.name, style = MaterialTheme.typography.bodyLarge)
-                repo.description?.let {
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-                Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = stringResource(R.string.cd_stargazers_count))
-                        Text(repo.stargazersCount.toString(), style = MaterialTheme.typography.bodyMedium)
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    repo.primaryLanguage?.let {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(Color.Yellow, CircleShape)
-                            )
-                            Text(it, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
+                Icon(Icons.Default.Star, contentDescription = stringResource(R.string.cd_stargazers_count))
+                Text(repo.stargazersCount.toString(), style = MaterialTheme.typography.bodyMedium)
             }
 
-            if (index < repos.lastIndex) {
-                HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSurface)
+            Spacer(modifier = Modifier.width(8.dp))
+
+            repo.primaryLanguage?.let {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(Color.Yellow, CircleShape)
+                    )
+                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }
@@ -234,7 +269,7 @@ private fun UserRepositoryList(modifier: Modifier = Modifier, repos: List<GitHub
 @Composable
 private fun UserRepositoryListPreview() {
     ExploreGitHubAndroidTheme {
-        UserRepositoryList(repos = dummyRepos)
+        UserRepoList(repos = dummyRepos, loadingMore = false, allLoaded = false, loadMore = {})
     }
 }
 
@@ -250,6 +285,6 @@ private class GitHubUserDetailUiStateProvider : PreviewParameterProvider<GitHubU
 @Composable
 private fun GitHubUserDetailScreenPreview(@PreviewParameter(GitHubUserDetailUiStateProvider::class) uiState: GitHubUserDetailUiState) {
     ExploreGitHubAndroidTheme {
-        GitHubUserDetailScreen(uiState = uiState, onBackClick = {})
+        GitHubUserDetailScreen(uiState = uiState, onBackClick = {}, loadMore = {})
     }
 }

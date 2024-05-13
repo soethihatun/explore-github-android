@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -28,10 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.designsystem.DevicePreview
+import co.binary.exploregithubandroid.core.designsystem.EndlessLazyColumn
 import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.dummyUsers
@@ -157,6 +152,7 @@ private fun UserList(
     EndlessLazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 16.dp),
+        enabled = true, // TODO:
         listState = rememberLazyListState(),
         items = users,
         itemKey = { user ->
@@ -202,7 +198,7 @@ private fun UserItem(
 }
 
 @Composable
-private fun LoadingItem() {
+internal fun LoadingItem() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -211,48 +207,6 @@ private fun LoadingItem() {
     ) {
         CircularProgressIndicator()
     }
-}
-
-@Composable
-internal fun <T> EndlessLazyColumn(
-    modifier: Modifier = Modifier,
-    loading: Boolean = false,
-    listState: LazyListState = rememberLazyListState(),
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    items: List<T>,
-    itemKey: (T) -> Any,
-    itemContent: @Composable (T) -> Unit,
-    loadingItem: @Composable () -> Unit,
-    loadMore: () -> Unit
-) {
-    val reachedBottom: Boolean by remember { derivedStateOf { listState.reachedBottom() } }
-
-    // load more if scrolled to bottom
-    LaunchedEffect(reachedBottom) {
-        if (reachedBottom && !loading) loadMore()
-    }
-
-    LazyColumn(modifier = modifier, state = listState, contentPadding = contentPadding) {
-        items(
-            items = items,
-            key = { item: T -> itemKey(item) },
-        ) { item ->
-            itemContent(item)
-        }
-        if (loading) {
-            item {
-                loadingItem()
-            }
-        }
-    }
-}
-
-/**
- * @param buffer Number of items to buffer at the end of the list
- */
-internal fun LazyListState.reachedBottom(buffer: Int = 1): Boolean {
-    val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
-    return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
 }
 
 private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUsersUiState> {

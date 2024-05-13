@@ -24,6 +24,7 @@ sealed interface SearchGitHubUsersUiState {
     data class Success(
         override val searchText: String,
         val users: List<GitHubUser>,
+        val shouldLoadMore: Boolean,
         val loadingMore: Boolean = false,
         val error: Boolean = false,
     ) : SearchGitHubUsersUiState
@@ -40,6 +41,7 @@ private data class SearchGitHubUserViewModelState(
     val error: Boolean = false,
     val page: Int = 1,
     val loadingMore: Boolean = false,
+    val allLoaded: Boolean = false,
 ) {
     // FIXME: Fix states later
     fun toUiState(): SearchGitHubUsersUiState = when {
@@ -47,9 +49,11 @@ private data class SearchGitHubUserViewModelState(
         users.isNotEmpty() -> SearchGitHubUsersUiState.Success(
             searchText = searchText,
             users = users,
+            shouldLoadMore = !allLoaded,
             loadingMore = loadingMore,
             error = error,
         )
+
         error -> SearchGitHubUsersUiState.Error(searchText)
         else -> SearchGitHubUsersUiState.Initial(searchText)
     }
@@ -69,7 +73,15 @@ internal class SearchGitHubUserViewModel @Inject constructor(
 
     fun search() {
         viewModelScope.launch {
-            viewModelState.update { it.copy(loading = true, users = emptyList(), error = false, page = 1) }
+            viewModelState.update {
+                it.copy(
+                    loading = true,
+                    users = emptyList(),
+                    error = false,
+                    page = 1,
+                    allLoaded = false,
+                )
+            }
             val state = viewModelState.value
             searchGitHubUserUseCase(state.searchText, state.page).fold(
                 onSuccess = { data ->
@@ -94,7 +106,7 @@ internal class SearchGitHubUserViewModel @Inject constructor(
                     Log.d(TAG, "loadMore: success")
                     if (newData.isEmpty()) {
                         // No more data
-                        // SearchGitHubUsersUiState.Empty
+                        viewModelState.update { it.copy(loadingMore = false, allLoaded = true) }
                     } else {
                         viewModelState.update {
                             it.copy(

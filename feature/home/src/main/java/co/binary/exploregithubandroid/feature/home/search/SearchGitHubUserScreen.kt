@@ -131,6 +131,7 @@ private fun SearchGitHubUserScreen(
                 is SearchGitHubUsersUiState.Success -> {
                     UserList(
                         users = uiState.users,
+                        shouldLoadMore = uiState.shouldLoadMore,
                         loadingMore = uiState.loadingMore,
                         onUserClick = onUserClick,
                         loadMore = loadMore
@@ -144,6 +145,7 @@ private fun SearchGitHubUserScreen(
 @Composable
 private fun UserList(
     modifier: Modifier = Modifier,
+    shouldLoadMore: Boolean,
     loadingMore: Boolean,
     users: List<GitHubUser>,
     onUserClick: (username: String) -> Unit,
@@ -152,7 +154,7 @@ private fun UserList(
     EndlessLazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 16.dp),
-        enabled = true, // TODO:
+        enabled = shouldLoadMore,
         listState = rememberLazyListState(),
         items = users,
         itemKey = { user ->
@@ -211,7 +213,12 @@ internal fun LoadingItem() {
 
 private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUsersUiState> {
     override val values: Sequence<SearchGitHubUsersUiState> = sequenceOf(
-        SearchGitHubUsersUiState.Success(searchText = "", users = dummyUsers),
+        SearchGitHubUsersUiState.Success(
+            searchText = "",
+            users = dummyUsers,
+            shouldLoadMore = true,
+            loadingMore = false
+        ),
         SearchGitHubUsersUiState.Initial(),
         SearchGitHubUsersUiState.Empty(),
         SearchGitHubUsersUiState.Error(),

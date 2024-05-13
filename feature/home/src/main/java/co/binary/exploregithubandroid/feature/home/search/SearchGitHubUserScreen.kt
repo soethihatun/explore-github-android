@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,7 +28,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +40,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
@@ -44,7 +48,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.designsystem.DevicePreview
 import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubUser
-import co.binary.exploregithubandroid.core.model.dummyUser
 import co.binary.exploregithubandroid.core.model.dummyUsers
 import co.binary.exploregithubandroid.feature.home.R
 import coil.compose.AsyncImage
@@ -58,36 +61,36 @@ internal fun SearchGitHubUserRoute(
     // Collect the UI state in a life cycle aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val searchText by viewModel.searchText.collectAsStateWithLifecycle()
-
     SearchGitHubUserScreen(
         modifier = modifier,
         uiState = uiState,
-        searchText = searchText,
         onSearchTextChange = viewModel::updateSearchText,
         onSearch = viewModel::search,
         onClearSearchText = viewModel::clearSearchText,
         onUserClick = goToUserDetail,
+        loadMore = viewModel::loadMore,
     )
 }
 
 @Composable
 private fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
-    searchText: String,
     uiState: SearchGitHubUsersUiState,
     onSearchTextChange: (String) -> Unit,
-    onSearch: (String) -> Unit,
+    onSearch: () -> Unit,
     onClearSearchText: () -> Unit,
     onUserClick: (username: String) -> Unit,
+    loadMore: () -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         val keyboardController = LocalSoftwareKeyboardController.current
         val focusManager = LocalFocusManager.current
 
         OutlinedTextField(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            value = searchText,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            value = uiState.searchText,
             onValueChange = onSearchTextChange,
             placeholder = { Text("Search GitHub users") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search icon") },
@@ -102,7 +105,7 @@ private fun SearchGitHubUserScreen(
                 onSearch = {
                     keyboardController?.hide()
                     focusManager.clearFocus()
-                    onSearch(searchText)
+                    onSearch()
                 }
             ),
         )
@@ -114,24 +117,29 @@ private fun SearchGitHubUserScreen(
             contentAlignment = Alignment.Center,
         ) {
             when (uiState) {
-                SearchGitHubUsersUiState.Initial -> {
+                is SearchGitHubUsersUiState.Initial -> {
                     Text("Search and explore GitHub users", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                SearchGitHubUsersUiState.Empty -> {
+                is SearchGitHubUsersUiState.Empty -> {
                     Text("No users found", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                SearchGitHubUsersUiState.Error -> {
+                is SearchGitHubUsersUiState.Error -> {
                     Text("Something went wrong. Please try again.", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                SearchGitHubUsersUiState.Loading -> {
+                is SearchGitHubUsersUiState.Loading -> {
                     CircularProgressIndicator()
                 }
 
                 is SearchGitHubUsersUiState.Success -> {
-                    UserList(users = uiState.users, onUserClick = onUserClick)
+                    UserList(
+                        users = uiState.users,
+                        loadingMore = uiState.loadingMore,
+                        onUserClick = onUserClick,
+                        loadMore = loadMore
+                    )
                 }
             }
         }
@@ -141,62 +149,119 @@ private fun SearchGitHubUserScreen(
 @Composable
 private fun UserList(
     modifier: Modifier = Modifier,
+    loadingMore: Boolean,
     users: List<GitHubUser>,
     onUserClick: (username: String) -> Unit,
+    loadMore: () -> Unit,
 ) {
-    LazyColumn(
+    EndlessLazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 16.dp),
-    ) {
-        items(
-            users,
-            key = {
-                // Use the ID as the unique and stable key
-                it.id
-            },
-        ) { user ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onUserClick(user.username) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            ) {
-                AsyncImage(
-                    model = user.avatarUrl,
-                    contentDescription = stringResource(id = R.string.cd_github_user_avatar_image),
-                    // FIXME: Fix placeholder
-                    placeholder = rememberVectorPainter(image = Icons.Default.Person),
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape),
-                )
+        listState = rememberLazyListState(),
+        items = users,
+        itemKey = { user ->
+            // Use the ID as the unique and stable key
+            user.id
+        },
+        itemContent = { user ->
+            UserItem(onUserClick = onUserClick, user = user)
+        },
+        loading = loadingMore,
+        loadingItem = {
+            LoadingItem()
+        },
+        loadMore = loadMore,
+    )
+}
 
-                Text(user.username, style = MaterialTheme.typography.bodyLarge)
+@Composable
+private fun UserItem(
+    onUserClick: (username: String) -> Unit,
+    user: GitHubUser
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onUserClick(user.username) }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        AsyncImage(
+            model = user.avatarUrl,
+            contentDescription = stringResource(id = R.string.cd_github_user_avatar_image),
+            // FIXME: Fix placeholder
+            placeholder = rememberVectorPainter(image = Icons.Default.Person),
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape),
+        )
+
+        Text(user.username, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+private fun LoadingItem() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+internal fun <T> EndlessLazyColumn(
+    modifier: Modifier = Modifier,
+    loading: Boolean = false,
+    listState: LazyListState = rememberLazyListState(),
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    items: List<T>,
+    itemKey: (T) -> Any,
+    itemContent: @Composable (T) -> Unit,
+    loadingItem: @Composable () -> Unit,
+    loadMore: () -> Unit
+) {
+    val reachedBottom: Boolean by remember { derivedStateOf { listState.reachedBottom() } }
+
+    // load more if scrolled to bottom
+    LaunchedEffect(reachedBottom) {
+        if (reachedBottom && !loading) loadMore()
+    }
+
+    LazyColumn(modifier = modifier, state = listState, contentPadding = contentPadding) {
+        items(
+            items = items,
+            key = { item: T -> itemKey(item) },
+        ) { item ->
+            itemContent(item)
+        }
+        if (loading) {
+            item {
+                loadingItem()
             }
         }
     }
 }
 
-@Preview
-@Composable
-private fun UserListPreview() {
-    ExploreGitHubAndroidTheme {
-        UserList(
-            users = listOf(dummyUser),
-            onUserClick = {},
-        )
-    }
+/**
+ * @param buffer Number of items to buffer at the end of the list
+ */
+internal fun LazyListState.reachedBottom(buffer: Int = 1): Boolean {
+    val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
+    return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
 }
 
 private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUsersUiState> {
     override val values: Sequence<SearchGitHubUsersUiState> = sequenceOf(
-        SearchGitHubUsersUiState.Success(users = dummyUsers),
-        SearchGitHubUsersUiState.Initial,
-        SearchGitHubUsersUiState.Empty,
-        SearchGitHubUsersUiState.Error,
-        SearchGitHubUsersUiState.Loading,
+        SearchGitHubUsersUiState.Success(searchText = "", users = dummyUsers),
+        SearchGitHubUsersUiState.Initial(),
+        SearchGitHubUsersUiState.Empty(),
+        SearchGitHubUsersUiState.Error(),
+        SearchGitHubUsersUiState.Loading(),
     )
 }
 
@@ -206,11 +271,11 @@ private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiSt
     ExploreGitHubAndroidTheme {
         SearchGitHubUserScreen(
             uiState = uiState,
-            searchText = "",
             onSearchTextChange = {},
             onSearch = {},
             onClearSearchText = {},
             onUserClick = {},
+            loadMore = {},
         )
     }
 }

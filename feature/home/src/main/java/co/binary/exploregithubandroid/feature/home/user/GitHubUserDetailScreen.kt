@@ -131,8 +131,8 @@ private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubU
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(user.username, style = MaterialTheme.typography.titleLarge)
 
-                    user.name?.let {
-                        Text(user.username, style = MaterialTheme.typography.titleMedium)
+                    user.name?.let { name ->
+                        Text(name, style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }

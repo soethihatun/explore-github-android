@@ -7,18 +7,52 @@ import co.binary.exploregithubandroid.core.domain.SearchGitHubUsersUseCase
 import co.binary.exploregithubandroid.core.model.GitHubUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed interface SearchGitHubUsersUiState {
-    data object Initial : SearchGitHubUsersUiState
-    data object Loading : SearchGitHubUsersUiState
-    data class Success(val users: List<GitHubUser>) : SearchGitHubUsersUiState
-    data object Empty : SearchGitHubUsersUiState
-    data object Error : SearchGitHubUsersUiState
+    val searchText: String
+
+    data class Initial(override val searchText: String = "") : SearchGitHubUsersUiState
+
+    data class Loading(override val searchText: String = "") : SearchGitHubUsersUiState
+    data class Success(
+        override val searchText: String,
+        val users: List<GitHubUser>,
+        val loadingMore: Boolean = false,
+        val error: Boolean = false,
+    ) : SearchGitHubUsersUiState
+
+    data class Empty(override val searchText: String = "") : SearchGitHubUsersUiState
+
+    data class Error(override val searchText: String = "") : SearchGitHubUsersUiState
+}
+
+private data class SearchGitHubUserViewModelState(
+    val loading: Boolean = false,
+    val users: List<GitHubUser> = emptyList(),
+    val searchText: String = "",
+    val error: Boolean = false,
+    val page: Int = 1,
+    val loadingMore: Boolean = false,
+) {
+    // FIXME: Fix states later
+    fun toUiState(): SearchGitHubUsersUiState = when {
+        loading -> SearchGitHubUsersUiState.Loading(searchText)
+        users.isNotEmpty() -> SearchGitHubUsersUiState.Success(
+            searchText = searchText,
+            users = users,
+            loadingMore = loadingMore,
+            error = error,
+        )
+        error -> SearchGitHubUsersUiState.Error(searchText)
+        else -> SearchGitHubUsersUiState.Initial(searchText)
+    }
 }
 
 private const val TAG = "SearchGitHubUserViewModel"
@@ -28,47 +62,62 @@ internal class SearchGitHubUserViewModel @Inject constructor(
     private val searchGitHubUserUseCase: SearchGitHubUsersUseCase,
 ) : ViewModel() {
 
-    private val _searchText = MutableStateFlow("")
-    val searchText: StateFlow<String> = _searchText.asStateFlow()
+    private val viewModelState = MutableStateFlow(SearchGitHubUserViewModelState())
+    val uiState: StateFlow<SearchGitHubUsersUiState> = viewModelState
+        .map { it.toUiState() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SearchGitHubUserViewModelState().toUiState())
 
-    private val _uiState = MutableStateFlow<SearchGitHubUsersUiState>(SearchGitHubUsersUiState.Initial)
-    val uiState: StateFlow<SearchGitHubUsersUiState> = _uiState.asStateFlow()
-
-    private var page = 0
-
-    fun search(query: String, page: Int) {
+    fun search() {
         viewModelScope.launch {
-            _uiState.update { SearchGitHubUsersUiState.Loading }
-            searchGitHubUserUseCase(query, page).fold(
-                onSuccess = {
-                    // TODO: Handle load more error
+            viewModelState.update { it.copy(loading = true, users = emptyList(), error = false, page = 1) }
+            val state = viewModelState.value
+            searchGitHubUserUseCase(state.searchText, state.page).fold(
+                onSuccess = { data ->
                     Log.d(TAG, "search: success")
-                    if (it.isEmpty()) {
-                        SearchGitHubUsersUiState.Empty
-                    } else {
-                        SearchGitHubUsersUiState.Success(it)
-                    }
+                    viewModelState.update { it.copy(loading = false, users = data) }
                 },
-                onFailure = {
-                    Log.d(TAG, "search: error")
-                    SearchGitHubUsersUiState.Error
+                onFailure = { throwable ->
+                    Log.e(TAG, "search: error", throwable)
+                    viewModelState.update { it.copy(loading = false, error = true) }
                 }
-            ).let { newState ->
-                _uiState.update { newState }
-            }
+            )
         }
     }
 
     fun loadMore() {
-        page++
-        search(query = searchText.value, page = page)
+        viewModelScope.launch {
+            viewModelState.update { it.copy(loadingMore = true) }
+            val state = viewModelState.value
+            val newPage = state.page + 1
+            searchGitHubUserUseCase(state.searchText, newPage).fold(
+                onSuccess = { newData ->
+                    Log.d(TAG, "loadMore: success")
+                    if (newData.isEmpty()) {
+                        // No more data
+                        // SearchGitHubUsersUiState.Empty
+                    } else {
+                        viewModelState.update {
+                            it.copy(
+                                loadingMore = false,
+                                users = state.users + newData,
+                                page = newPage,
+                            )
+                        }
+                    }
+                },
+                onFailure = {
+                    Log.d(TAG, "loadMore: error")
+                    viewModelState.update { it.copy(loadingMore = false, error = true) }
+                }
+            )
+        }
     }
 
     fun updateSearchText(text: String) {
-        _searchText.update { text }
+        viewModelState.update { it.copy(searchText = text) }
     }
 
     fun clearSearchText() {
-        _searchText.update { "" }
+        viewModelState.update { it.copy(searchText = "") }
     }
 }

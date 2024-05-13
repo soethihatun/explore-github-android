@@ -13,10 +13,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,13 +31,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.binary.exploregithubandroid.core.designsystem.DevicePreview
 import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.dummyUser
@@ -47,9 +58,15 @@ internal fun SearchGitHubUserRoute(
     // Collect the UI state in a life cycle aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val searchText by viewModel.searchText.collectAsStateWithLifecycle()
+
     SearchGitHubUserScreen(
         modifier = modifier,
         uiState = uiState,
+        searchText = searchText,
+        onSearchTextChange = viewModel::updateSearchText,
+        onSearch = viewModel::search,
+        onClearSearchText = viewModel::clearSearchText,
         onUserClick = goToUserDetail,
     )
 }
@@ -57,17 +74,44 @@ internal fun SearchGitHubUserRoute(
 @Composable
 private fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
+    searchText: String,
     uiState: SearchGitHubUsersUiState,
+    onSearchTextChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onClearSearchText: () -> Unit,
     onUserClick: (username: String) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        // TODO: Add search box
-        Text("Search the user")
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val focusManager = LocalFocusManager.current
+
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            value = searchText,
+            onValueChange = onSearchTextChange,
+            placeholder = { Text("Search GitHub users") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search icon") },
+            trailingIcon = {
+                IconButton(onClick = onClearSearchText) {
+                    Icon(Icons.Default.Clear, contentDescription = "Clear search text")
+                }
+            },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onSearch(searchText)
+                }
+            ),
+        )
 
         Box(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxSize(), contentAlignment = Alignment.Center
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center,
         ) {
             when (uiState) {
                 SearchGitHubUsersUiState.Initial -> {
@@ -102,7 +146,7 @@ private fun UserList(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 16.dp),
+        contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         items(
             users,
@@ -156,12 +200,16 @@ private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchG
     )
 }
 
-@Preview
+@DevicePreview
 @Composable
 private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiStateProvider::class) uiState: SearchGitHubUsersUiState) {
     ExploreGitHubAndroidTheme {
         SearchGitHubUserScreen(
             uiState = uiState,
+            searchText = "",
+            onSearchTextChange = {},
+            onSearch = {},
+            onClearSearchText = {},
             onUserClick = {},
         )
     }

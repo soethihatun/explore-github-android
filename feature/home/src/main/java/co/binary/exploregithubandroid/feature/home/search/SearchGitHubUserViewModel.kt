@@ -28,12 +28,11 @@ internal class SearchGitHubUserViewModel @Inject constructor(
     private val searchGitHubUserUseCase: SearchGitHubUsersUseCase,
 ) : ViewModel() {
 
+    private val _searchText = MutableStateFlow("")
+    val searchText: StateFlow<String> = _searchText.asStateFlow()
+
     private val _uiState = MutableStateFlow<SearchGitHubUsersUiState>(SearchGitHubUsersUiState.Initial)
     val uiState: StateFlow<SearchGitHubUsersUiState> = _uiState.asStateFlow()
-
-    init {
-        search("johndoe")
-    }
 
     fun search(query: String) {
         viewModelScope.launch {
@@ -55,5 +54,13 @@ internal class SearchGitHubUserViewModel @Inject constructor(
                 _uiState.update { newState }
             }
         }
+    }
+
+    fun updateSearchText(text: String) {
+        _searchText.update { text }
+    }
+
+    fun clearSearchText() {
+        _searchText.update { "" }
     }
 }

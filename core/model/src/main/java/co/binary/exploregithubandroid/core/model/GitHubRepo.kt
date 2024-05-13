@@ -5,7 +5,7 @@ data class GitHubRepo(
     val name: String,
     val description: String?,
     val primaryLanguage: String?,
-    val url: String,
+    val htmlUrl: String,
     val stargazersCount: Int,
 )
 
@@ -15,7 +15,7 @@ val dummyRepo = GitHubRepo(
     name = "Lorem Ipsum Repo",
     description = "Lorem Ipsum description",
     primaryLanguage = "Kotlin",
-    url = "https://github.com/JetBrains/kotlin",
+    htmlUrl = "https://github.com/JetBrains/kotlin",
     stargazersCount = 1,
 )
 

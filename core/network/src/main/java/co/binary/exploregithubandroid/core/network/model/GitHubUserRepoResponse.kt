@@ -15,8 +15,8 @@ data class GitHubUserRepoResponse(
     val fullName: String,
     @SerialName("description")
     val description: String?,
-    @SerialName("url")
-    val url: String,
+    @SerialName("html_url")
+    val htmlUrl: String,
     @SerialName("language")
     val language: String?,
     @SerialName("stargazers_count")

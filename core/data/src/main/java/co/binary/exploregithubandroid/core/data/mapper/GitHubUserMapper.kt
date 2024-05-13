@@ -35,5 +35,5 @@ internal fun GitHubUserRepoResponse.asExternalModel(): GitHubRepo = GitHubRepo(
     description = description,
     stargazersCount = stargazersCount,
     primaryLanguage = language,
-    url = url,
+    htmlUrl = htmlUrl,
 )

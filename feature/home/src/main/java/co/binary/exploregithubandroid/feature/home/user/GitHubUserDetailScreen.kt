@@ -1,5 +1,7 @@
 package co.binary.exploregithubandroid.feature.home.user
 
+import android.content.Context
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,12 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.designsystem.DevicePreview
@@ -99,11 +103,16 @@ private fun GitHubUserDetailScreen(
                 }
 
                 is GitHubUserDetailUiState.Success -> {
+                    val context = LocalContext.current
+
                     GitHubUserDetailContent(
                         user = uiState.user,
                         loadingMore = uiState.loadingMore,
                         allLoaded = uiState.allLoaded,
                         loadMore = loadMore,
+                        onRepoClick = { url ->
+                            context.launchCustomTabs(url)
+                        },
                     )
                 }
             }
@@ -117,7 +126,8 @@ private fun GitHubUserDetailContent(
     user: GitHubUserDetail,
     loadingMore: Boolean,
     allLoaded: Boolean,
-    loadMore: () -> Unit
+    loadMore: () -> Unit,
+    onRepoClick: (String) -> Unit
 ) {
     Column(
         modifier = modifier.fillMaxSize()
@@ -188,7 +198,13 @@ private fun GitHubUserDetailContent(
             }
         }
 
-        UserRepoList(repos = user.repos, loadingMore = loadingMore, loadMore = loadMore, allLoaded = allLoaded)
+        UserRepoList(
+            repos = user.repos,
+            loadingMore = loadingMore,
+            loadMore = loadMore,
+            allLoaded = allLoaded,
+            onRepoClick = onRepoClick
+        )
     }
 }
 
@@ -198,7 +214,8 @@ private fun UserRepoList(
     repos: List<GitHubRepo>,
     loadingMore: Boolean,
     allLoaded: Boolean,
-    loadMore: () -> Unit
+    loadMore: () -> Unit,
+    onRepoClick: (String) -> Unit
 ) {
     EndlessLazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -211,7 +228,7 @@ private fun UserRepoList(
             repo.id
         },
         itemContent = { repo ->
-            UserRepoItem(repo)
+            UserRepoItem(repo, onRepoClick = { onRepoClick(repo.htmlUrl) })
         },
         loading = loadingMore,
         loadingItem = {
@@ -222,11 +239,11 @@ private fun UserRepoList(
 }
 
 @Composable
-private fun UserRepoItem(repo: GitHubRepo) {
+private fun UserRepoItem(repo: GitHubRepo, onRepoClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable { onRepoClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(repo.name, style = MaterialTheme.typography.bodyLarge)
@@ -269,7 +286,7 @@ private fun UserRepoItem(repo: GitHubRepo) {
 @Composable
 private fun UserRepositoryListPreview() {
     ExploreGitHubAndroidTheme {
-        UserRepoList(repos = dummyRepos, loadingMore = false, allLoaded = false, loadMore = {})
+        UserRepoList(repos = dummyRepos, loadingMore = false, allLoaded = false, loadMore = {}, onRepoClick = {})
     }
 }
 
@@ -287,4 +304,8 @@ private fun GitHubUserDetailScreenPreview(@PreviewParameter(GitHubUserDetailUiSt
     ExploreGitHubAndroidTheme {
         GitHubUserDetailScreen(uiState = uiState, onBackClick = {}, loadMore = {})
     }
+}
+
+private fun Context.launchCustomTabs(url: String) {
+    CustomTabsIntent.Builder().build().launchUrl(this, url.toUri())
 }

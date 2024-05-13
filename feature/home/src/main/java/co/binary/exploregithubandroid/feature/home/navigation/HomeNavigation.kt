@@ -26,14 +26,14 @@ internal class UserDetailArgs(val username: String) {
             this(username = checkNotNull(savedStateHandle[UserDetailNavigationArgs.USERNAME]))
 }
 
-fun NavGraphBuilder.homeNavGraph(navigateToUserDetail: (username: String) -> Unit) {
+fun NavGraphBuilder.homeNavGraph(navigateToUserDetail: (username: String) -> Unit, onBackClick: () -> Unit) {
     navigation(
         route = HomeNavigation.GRAPH_ROUTE,
         startDestination = HomeNavigation.ROUTE
     ) {
         homeScreen(goToUserDetail = navigateToUserDetail)
 
-        userDetailScreen()
+        userDetailScreen(onBackClick = onBackClick)
     }
 }
 
@@ -45,9 +45,9 @@ private fun NavGraphBuilder.homeScreen(
     }
 }
 
-private fun NavGraphBuilder.userDetailScreen() {
+private fun NavGraphBuilder.userDetailScreen(onBackClick: () -> Unit) {
     composable(route = HomeNavigation.USER_DETAIL_ROUTE) {
-        GitHubUserDetailRoute()
+        GitHubUserDetailRoute(onBackClick = onBackClick)
     }
 }
 

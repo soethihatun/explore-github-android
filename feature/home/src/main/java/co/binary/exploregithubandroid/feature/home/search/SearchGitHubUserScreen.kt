@@ -86,7 +86,7 @@ private fun SearchGitHubUserScreen(
         val focusManager = LocalFocusManager.current
 
         OutlinedTextField(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             value = searchText,
             onValueChange = onSearchTextChange,
             placeholder = { Text("Search GitHub users") },

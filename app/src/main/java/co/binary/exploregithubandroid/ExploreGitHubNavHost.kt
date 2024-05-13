@@ -11,6 +11,9 @@ import co.binary.exploregithubandroid.feature.home.navigation.navigateToUserDeta
 @Composable
 internal fun ExploreGitHubNavHost(modifier: Modifier = Modifier, navController: NavHostController) {
     NavHost(modifier = modifier, navController = navController, startDestination = HomeNavigation.GRAPH_ROUTE) {
-        homeNavGraph(navigateToUserDetail = { username -> navController.navigateToUserDetail(username) })
+        homeNavGraph(
+            navigateToUserDetail = { username -> navController.navigateToUserDetail(username) },
+            onBackClick = navController::popBackStack,
+        )
     }
 }

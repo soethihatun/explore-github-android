@@ -10,6 +10,8 @@ import androidx.navigation.compose.rememberNavController
 
 @Composable
 internal fun ExploreGitHubApp() {
+    val navController = rememberNavController()
+
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -18,7 +20,7 @@ internal fun ExploreGitHubApp() {
         ) {
             ExploreGitHubNavHost(
                 modifier = Modifier.fillMaxSize(),
-                navController = rememberNavController(),
+                navController = navController,
             )
         }
     }

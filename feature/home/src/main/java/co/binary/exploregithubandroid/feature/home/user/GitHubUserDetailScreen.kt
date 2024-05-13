@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -46,6 +48,7 @@ import co.binary.exploregithubandroid.core.model.GitHubRepo
 import co.binary.exploregithubandroid.core.model.GitHubUserDetail
 import co.binary.exploregithubandroid.core.model.dummyRepos
 import co.binary.exploregithubandroid.core.model.dummyUserDetail
+import co.binary.exploregithubandroid.feature.home.R
 import coil.compose.AsyncImage
 
 @Composable
@@ -67,7 +70,7 @@ private fun GitHubUserDetailScreen(modifier: Modifier = Modifier, uiState: GitHu
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when (uiState) {
             GitHubUserDetailUiState.Error -> {
-                Text("Something went wrong. Please try again.", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.general_error_message), style = MaterialTheme.typography.bodyLarge)
             }
 
             GitHubUserDetailUiState.Loading -> {
@@ -98,7 +101,7 @@ private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubU
             ) {
                 AsyncImage(
                     model = user.avatarUrl,
-                    contentDescription = "avatar image",
+                    contentDescription = stringResource(R.string.cd_github_user_avatar_image),
                     // FIXME: Fix placeholder
                     placeholder = rememberVectorPainter(image = Icons.Default.Person),
                     modifier = Modifier
@@ -121,15 +124,18 @@ private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubU
                     .padding(top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Person, contentDescription = "followers & following users")
+                Icon(Icons.Default.Person, contentDescription = stringResource(R.string.cd_followers_following_users))
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text(user.followers.toString(), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    user.followers.toString(),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                )
 
                 Spacer(modifier = Modifier.width(2.dp))
 
-                Text("followers", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.followers), style = MaterialTheme.typography.bodyLarge)
 
                 VerticalDivider(
                     color = MaterialTheme.colorScheme.onSurface,
@@ -138,11 +144,14 @@ private fun GitHubUserDetailContent(modifier: Modifier = Modifier, user: GitHubU
                         .padding(horizontal = 8.dp)
                 )
 
-                Text(user.following.toString(), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    user.following.toString(),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
 
                 Spacer(modifier = Modifier.width(2.dp))
 
-                Text("following", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.following), style = MaterialTheme.typography.bodyLarge)
             }
         }
 
@@ -173,7 +182,7 @@ private fun UserRepositoryList(modifier: Modifier = Modifier, repos: List<GitHub
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(Icons.Default.Star, contentDescription = "followers & following users")
+                        Icon(Icons.Default.Star, contentDescription = stringResource(R.string.cd_stargazers_count))
                         Text(repo.stargazersCount.toString(), style = MaterialTheme.typography.bodyMedium)
                     }
 

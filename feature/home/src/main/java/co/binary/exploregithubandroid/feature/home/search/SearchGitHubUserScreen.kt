@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -34,6 +35,7 @@ import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndro
 import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.dummyUser
 import co.binary.exploregithubandroid.core.model.dummyUsers
+import co.binary.exploregithubandroid.feature.home.R
 import coil.compose.AsyncImage
 
 @Composable
@@ -119,7 +121,7 @@ private fun UserList(
             ) {
                 AsyncImage(
                     model = user.avatarUrl,
-                    contentDescription = "avatar image",
+                    contentDescription = stringResource(id = R.string.cd_github_user_avatar_image),
                     // FIXME: Fix placeholder
                     placeholder = rememberVectorPainter(image = Icons.Default.Person),
                     modifier = Modifier

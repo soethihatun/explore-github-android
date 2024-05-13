@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="general_error_message">Something went wrong. Please try again.</string>
+    <string name="cd_github_user_avatar_image">GitHub User avatar image</string>
+    <string name="cd_followers_following_users"><![CDATA[followers & following users]]></string>
+    <string name="cd_stargazers_count">stargazers count</string>
+    <string name="followers">followers</string>
+    <string name="following">following</string>
+</resources>

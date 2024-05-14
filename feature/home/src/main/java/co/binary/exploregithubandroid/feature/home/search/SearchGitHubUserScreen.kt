@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -159,7 +158,6 @@ private fun UserList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 16.dp),
         enabled = shouldLoadMore,
-        listState = rememberLazyListState(),
         items = users,
         itemKey = { user ->
             // Use the ID as the unique and stable key

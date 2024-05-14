@@ -2,7 +2,6 @@ package co.binary.exploregithubandroid.feature.home.user
 
 import android.content.Context
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +30,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +44,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
@@ -50,10 +54,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.designsystem.DevicePreview
 import co.binary.exploregithubandroid.core.designsystem.EndlessLazyColumn
 import co.binary.exploregithubandroid.core.designsystem.ExploreGitHubTopAppBar
+import co.binary.exploregithubandroid.core.designsystem.isFirstItemVisible
 import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubRepo
 import co.binary.exploregithubandroid.core.model.GitHubUserDetail
-import co.binary.exploregithubandroid.core.model.dummyRepos
 import co.binary.exploregithubandroid.core.model.dummyUserDetail
 import co.binary.exploregithubandroid.feature.home.R
 import co.binary.exploregithubandroid.feature.home.search.LoadingItem
@@ -85,9 +89,11 @@ private fun GitHubUserDetailScreen(
     loadMore: () -> Unit
 ) {
     Column(modifier = modifier.fillMaxSize()) {
+        var title by remember { mutableStateOf("") }
+
         ExploreGitHubTopAppBar(
             modifier = Modifier.fillMaxWidth(),
-            title = "",
+            title = title,
             navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
             onNavigationClick = onBackClick,
         )
@@ -113,7 +119,15 @@ private fun GitHubUserDetailScreen(
                         onRepoClick = { url ->
                             context.launchCustomTabs(url)
                         },
+                        onTopChanged = { isOnTop ->
+                            title = if (isOnTop) {
+                                ""
+                            } else {
+                                uiState.user.username
+                            }
+                        }
                     )
+
                 }
             }
         }
@@ -127,105 +141,25 @@ private fun GitHubUserDetailContent(
     loadingMore: Boolean,
     allLoaded: Boolean,
     loadMore: () -> Unit,
-    onRepoClick: (String) -> Unit
+    onRepoClick: (String) -> Unit,
+    onTopChanged: (Boolean) -> Unit,
 ) {
-    Column(
-        modifier = modifier.fillMaxSize()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AsyncImage(
-                    model = user.avatarUrl,
-                    contentDescription = stringResource(R.string.cd_github_user_avatar_image),
-                    // FIXME: Fix placeholder
-                    placeholder = rememberVectorPainter(image = Icons.Default.Person),
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape),
-                )
+    val lazyListState = rememberLazyListState()
+    // Check if the first item is visible with behavior similar to distinctUnitChange
+    val isAtTop by remember { derivedStateOf { lazyListState.isFirstItemVisible } }
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(user.username, style = MaterialTheme.typography.titleLarge)
-
-                    user.name?.let { name ->
-                        Text(name, style = MaterialTheme.typography.titleMedium)
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .height(IntrinsicSize.Min)
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Person, contentDescription = stringResource(R.string.cd_followers_following_users))
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    user.followers.toString(),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                )
-
-                Spacer(modifier = Modifier.width(2.dp))
-
-                Text(stringResource(R.string.followers), style = MaterialTheme.typography.bodyLarge)
-
-                VerticalDivider(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(horizontal = 8.dp)
-                )
-
-                Text(
-                    user.following.toString(),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
-                )
-
-                Spacer(modifier = Modifier.width(2.dp))
-
-                Text(stringResource(R.string.following), style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-
-        UserRepoList(
-            repos = user.repos,
-            loadingMore = loadingMore,
-            loadMore = loadMore,
-            allLoaded = allLoaded,
-            onRepoClick = onRepoClick
-        )
-    }
-}
-
-@Composable
-private fun UserRepoList(
-    modifier: Modifier = Modifier,
-    repos: List<GitHubRepo>,
-    loadingMore: Boolean,
-    allLoaded: Boolean,
-    loadMore: () -> Unit,
-    onRepoClick: (String) -> Unit
-) {
     EndlessLazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 16.dp),
         enabled = !allLoaded,
-        listState = rememberLazyListState(),
-        items = repos,
+        listState = lazyListState,
+        items = user.repos,
         itemKey = { repo ->
             // Use the ID as the unique and stable key
             repo.id
+        },
+        headerItem = {
+            UserInfoItem(user)
         },
         itemContent = { repo ->
             UserRepoItem(repo, onRepoClick = { onRepoClick(repo.htmlUrl) })
@@ -236,6 +170,79 @@ private fun UserRepoList(
         },
         loadMore = loadMore,
     )
+
+    LaunchedEffect(isAtTop) {
+        onTopChanged(isAtTop)
+    }
+}
+
+@Composable
+private fun UserInfoItem(user: GitHubUserDetail) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            AsyncImage(
+                model = user.avatarUrl,
+                contentDescription = stringResource(R.string.cd_github_user_avatar_image),
+                // FIXME: Fix placeholder
+                placeholder = rememberVectorPainter(image = Icons.Default.Person),
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape),
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(user.username, style = MaterialTheme.typography.titleLarge)
+
+                user.name?.let { name ->
+                    Text(name, style = MaterialTheme.typography.titleMedium)
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .height(IntrinsicSize.Min)
+                .padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Person, contentDescription = stringResource(R.string.cd_followers_following_users))
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                user.followers.toString(),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            )
+
+            Spacer(modifier = Modifier.width(2.dp))
+
+            Text(stringResource(R.string.followers), style = MaterialTheme.typography.bodyLarge)
+
+            VerticalDivider(
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 8.dp)
+            )
+
+            Text(
+                user.following.toString(),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+            )
+
+            Spacer(modifier = Modifier.width(2.dp))
+
+            Text(stringResource(R.string.following), style = MaterialTheme.typography.bodyLarge)
+        }
+    }
 }
 
 @Composable
@@ -246,47 +253,37 @@ private fun UserRepoItem(repo: GitHubRepo, onRepoClick: () -> Unit) {
             .clickable { onRepoClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(repo.name, style = MaterialTheme.typography.bodyLarge)
-        repo.description?.let {
-            Text(
-                it,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-        Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(repo.name, style = MaterialTheme.typography.titleSmall)
+
+        Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(Icons.Default.Star, contentDescription = stringResource(R.string.cd_stargazers_count))
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = stringResource(R.string.cd_stargazers_count),
+                    tint = Color.Green,
+                )
                 Text(repo.stargazersCount.toString(), style = MaterialTheme.typography.bodyMedium)
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
             repo.primaryLanguage?.let {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(Color.Yellow, CircleShape)
-                    )
-                    Text(it, style = MaterialTheme.typography.bodyMedium)
-                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(it, style = MaterialTheme.typography.bodyMedium)
             }
         }
-    }
-}
 
-@Preview
-@Composable
-private fun UserRepositoryListPreview() {
-    ExploreGitHubAndroidTheme {
-        UserRepoList(repos = dummyRepos, loadingMore = false, allLoaded = false, loadMore = {}, onRepoClick = {})
+        repo.description?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
 

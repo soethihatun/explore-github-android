@@ -22,6 +22,7 @@ fun <T> EndlessLazyColumn(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     items: List<T>,
     itemKey: (T) -> Any,
+    headerItem: (@Composable () -> Unit)? = null,
     itemContent: @Composable (T) -> Unit,
     loadingItem: @Composable () -> Unit,
     loadMore: () -> Unit
@@ -34,6 +35,11 @@ fun <T> EndlessLazyColumn(
     }
 
     LazyColumn(modifier = modifier, state = listState, contentPadding = contentPadding) {
+        headerItem?.let {
+            item {
+                it()
+            }
+        }
         items(
             items = items,
             key = { item: T -> itemKey(item) },
@@ -55,3 +61,6 @@ private fun LazyListState.reachedBottom(buffer: Int = 1): Boolean {
     val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
     return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
 }
+
+val LazyListState.isFirstItemVisible: Boolean
+    get() = firstVisibleItemIndex == 0

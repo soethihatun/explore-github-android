@@ -1,4 +1,4 @@
-package co.binary.exploregithubandroid.core.network.model
+package co.binary.exploregithubandroid.core.network.user.model
 
 
 import kotlinx.serialization.SerialName

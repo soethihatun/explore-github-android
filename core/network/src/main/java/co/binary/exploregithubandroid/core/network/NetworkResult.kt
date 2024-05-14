@@ -2,6 +2,9 @@ package co.binary.exploregithubandroid.core.network
 
 import retrofit2.Response
 
+/**
+ * Transform Retrofit Response to Result
+ */
 internal suspend fun <T> getResult(call: suspend () -> Response<T>): Result<T> {
     return try {
         val response = call()

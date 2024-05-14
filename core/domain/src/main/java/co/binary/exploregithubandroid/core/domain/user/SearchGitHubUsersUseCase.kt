@@ -1,8 +1,8 @@
-package co.binary.exploregithubandroid.core.domain
+package co.binary.exploregithubandroid.core.domain.user
 
-import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.IoDispatcher
-import co.binary.exploregithubandroid.core.repository.GitHubUserRepository
+import co.binary.exploregithubandroid.core.model.user.GitHubUser
+import co.binary.exploregithubandroid.core.repository.user.GitHubUserRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

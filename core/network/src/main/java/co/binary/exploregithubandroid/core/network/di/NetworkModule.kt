@@ -1,7 +1,7 @@
 package co.binary.exploregithubandroid.core.network.di
 
 import co.binary.exploregithubandroid.core.network.BuildConfig
-import co.binary.exploregithubandroid.core.network.service.GitHubService
+import co.binary.exploregithubandroid.core.network.user.service.GitHubService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides

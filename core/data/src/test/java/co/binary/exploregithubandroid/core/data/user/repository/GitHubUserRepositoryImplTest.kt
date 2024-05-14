@@ -1,10 +1,10 @@
-package co.binary.exploregithubandroid.core.data.repository
+package co.binary.exploregithubandroid.core.data.user.repository
 
-import co.binary.exploregithubandroid.core.data.mapper.asExternalModel
-import co.binary.exploregithubandroid.core.data.testdoubles.FakeGitHubUserNetworkDataSource
-import co.binary.exploregithubandroid.core.network.model.GitHubUserDetailResponse
-import co.binary.exploregithubandroid.core.network.model.GitHubUserRepoResponse
-import co.binary.exploregithubandroid.core.network.model.SearchGitHubUserItemResponse
+import co.binary.exploregithubandroid.core.data.user.mapper.asExternalModel
+import co.binary.exploregithubandroid.core.data.user.testdoubles.FakeGitHubUserNetworkDataSource
+import co.binary.exploregithubandroid.core.network.user.model.GitHubUserDetailResponse
+import co.binary.exploregithubandroid.core.network.user.model.GitHubUserRepoResponse
+import co.binary.exploregithubandroid.core.network.user.model.SearchGitHubUserItemResponse
 import com.google.common.truth.Truth
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -16,19 +16,15 @@ class GitHubUserRepositoryImplTest {
         login = "login",
         id = 1,
         avatarUrl = "avatarUrl",
-        nodeId = "nodeid",
     )
 
     private val gitHubUserRepoResponse = GitHubUserRepoResponse(
         id = 1,
         name = "name",
-        nodeId = "nodeid",
         htmlUrl = "htmlUrl",
         description = "description",
         stargazersCount = 1,
-        topics = listOf("topic"),
         language = "language",
-        fullName = "full_name",
     )
 
     private val gitHubUserDetailResponse = GitHubUserDetailResponse(

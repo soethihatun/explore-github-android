@@ -1,12 +1,12 @@
-package co.binary.exploregithubandroid.feature.home.user
+package co.binary.exploregithubandroid.feature.home.detail
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.binary.exploregithubandroid.core.domain.GetGitHubUserDetailUseCase
-import co.binary.exploregithubandroid.core.domain.GetGitHubUserReposUseCase
-import co.binary.exploregithubandroid.core.model.GitHubUserDetail
+import co.binary.exploregithubandroid.core.domain.user.GetGitHubUserDetailUseCase
+import co.binary.exploregithubandroid.core.domain.user.GetGitHubUserReposUseCase
+import co.binary.exploregithubandroid.core.model.user.GitHubUserDetail
 import co.binary.exploregithubandroid.feature.home.navigation.UserDetailArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +23,7 @@ sealed interface GitHubUserDetailUiState {
         val page: Int,
         val loadingMore: Boolean = false,
         val allLoaded: Boolean = false,
+        val error: Throwable? = null,
     ) : GitHubUserDetailUiState
 
     data object Error : GitHubUserDetailUiState
@@ -65,7 +66,7 @@ internal class GitHubUserDetailViewModel @Inject constructor(
 
     fun loadMore() {
         val state = (uiState.value as? GitHubUserDetailUiState.Success) ?: return
-        _uiState.update { state.copy(loadingMore = true) }
+        _uiState.update { state.copy(error = null, loadingMore = true) }
         viewModelScope.launch {
             val newPage = state.page + 1
             getGitHubUserReposUseCase(username = args.username, page = newPage).fold(
@@ -77,13 +78,12 @@ internal class GitHubUserDetailViewModel @Inject constructor(
                         state.copy(user = user, page = newPage)
                     }
                 },
-                onFailure = {
-                    // FIXME: handle error
-                    Log.e(TAG, "loadMore: ", it)
-                    GitHubUserDetailUiState.Error
+                onFailure = { throwable ->
+                    Log.e(TAG, "loadMore: ", throwable)
+                    state.copy(error = throwable)
                 }
             ).let { newState ->
-                _uiState.update { newState }
+                _uiState.update { newState.copy(loadingMore = false) }
             }
         }
     }

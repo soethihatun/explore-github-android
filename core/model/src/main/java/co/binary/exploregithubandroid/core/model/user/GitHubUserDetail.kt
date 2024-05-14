@@ -1,4 +1,4 @@
-package co.binary.exploregithubandroid.core.model
+package co.binary.exploregithubandroid.core.model.user
 
 data class GitHubUserDetail(
     val id: Int,
@@ -7,7 +7,7 @@ data class GitHubUserDetail(
     val name: String?,
     val followers: Int,
     val following: Int,
-    val repos: List<GitHubRepo>
+    val repos: List<GitHubUserRepo>
 )
 
 // TODO: delete later

@@ -1,6 +1,6 @@
-package co.binary.exploregithubandroid.core.model
+package co.binary.exploregithubandroid.core.model.user
 
-data class GitHubRepo(
+data class GitHubUserRepo(
     val id: Int,
     val name: String,
     val description: String?,
@@ -10,7 +10,7 @@ data class GitHubRepo(
 )
 
 // TODO: delete later
-val dummyRepo = GitHubRepo(
+val dummyRepo = GitHubUserRepo(
     id = 1,
     name = "Lorem Ipsum Repo",
     description = "Lorem Ipsum description",

@@ -1,10 +1,10 @@
-package co.binary.exploregithubandroid.core.data.testdoubles
+package co.binary.exploregithubandroid.core.data.user.testdoubles
 
-import co.binary.exploregithubandroid.core.network.datasource.GitHubUserNetworkDataSource
-import co.binary.exploregithubandroid.core.network.model.GitHubUserDetailResponse
-import co.binary.exploregithubandroid.core.network.model.GitHubUserRepoResponse
-import co.binary.exploregithubandroid.core.network.model.SearchGitHubUserItemResponse
-import co.binary.exploregithubandroid.core.network.model.SearchGitHubUserResponse
+import co.binary.exploregithubandroid.core.network.user.datasource.GitHubUserNetworkDataSource
+import co.binary.exploregithubandroid.core.network.user.model.GitHubUserDetailResponse
+import co.binary.exploregithubandroid.core.network.user.model.GitHubUserRepoResponse
+import co.binary.exploregithubandroid.core.network.user.model.SearchGitHubUserItemResponse
+import co.binary.exploregithubandroid.core.network.user.model.SearchGitHubUserResponse
 import org.jetbrains.annotations.TestOnly
 
 class FakeGitHubUserNetworkDataSource(
@@ -13,7 +13,7 @@ class FakeGitHubUserNetworkDataSource(
     private val gitHubUserRepoList: MutableList<GitHubUserRepoResponse> = mutableListOf(),
 ) : GitHubUserNetworkDataSource {
 
-    override suspend fun searchUsers(query: String, page: Int): Result<SearchGitHubUserResponse> {
+    override suspend fun searchGitHubUsers(query: String, page: Int): Result<SearchGitHubUserResponse> {
         if (query.isEmpty() || page < 1) return Result.failure(Exception("Error"))
         return searchGitHubUserItemList.filter {
             it.login.contains(query, ignoreCase = true)
@@ -22,14 +22,14 @@ class FakeGitHubUserNetworkDataSource(
         }
     }
 
-    override suspend fun getUserDetail(username: String): Result<GitHubUserDetailResponse> {
+    override suspend fun getGitHubUserDetail(username: String): Result<GitHubUserDetailResponse> {
         if (username.isEmpty()) return Result.failure(Exception("Error"))
         return gitHubUserDetailList.find {
             it.login.equals(username, ignoreCase = true)
         }?.let { Result.success(it) } ?: Result.failure(Exception("Error"))
     }
 
-    override suspend fun getUserRepos(username: String, page: Int): Result<List<GitHubUserRepoResponse>> {
+    override suspend fun getGitHubUserRepos(username: String, page: Int): Result<List<GitHubUserRepoResponse>> {
         if (username.isEmpty() || page < 1) return Result.failure(Exception("Error"))
         return Result.success(gitHubUserRepoList)
     }

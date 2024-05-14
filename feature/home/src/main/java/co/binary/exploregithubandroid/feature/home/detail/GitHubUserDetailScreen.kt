@@ -1,4 +1,4 @@
-package co.binary.exploregithubandroid.feature.home.user
+package co.binary.exploregithubandroid.feature.home.detail
 
 import android.content.Context
 import androidx.browser.customtabs.CustomTabsIntent
@@ -51,9 +51,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.binary.exploregithubandroid.core.model.GitHubRepo
-import co.binary.exploregithubandroid.core.model.GitHubUserDetail
-import co.binary.exploregithubandroid.core.model.dummyUserDetail
+import co.binary.exploregithubandroid.core.model.user.GitHubUserDetail
+import co.binary.exploregithubandroid.core.model.user.GitHubUserRepo
+import co.binary.exploregithubandroid.core.model.user.dummyUserDetail
 import co.binary.exploregithubandroid.core.ui.DevicePreview
 import co.binary.exploregithubandroid.core.ui.component.EndlessLazyColumn
 import co.binary.exploregithubandroid.core.ui.component.ExploreGitHubTopAppBar
@@ -61,6 +61,7 @@ import co.binary.exploregithubandroid.core.ui.component.isFirstItemVisible
 import co.binary.exploregithubandroid.core.ui.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.feature.home.R
 import co.binary.exploregithubandroid.feature.home.search.LoadingItem
+import co.binary.exploregithubandroid.feature.home.search.toErrorMessage
 import coil.compose.AsyncImage
 
 @Composable
@@ -68,6 +69,7 @@ internal fun GitHubUserDetailRoute(
     modifier: Modifier = Modifier,
     viewModel: GitHubUserDetailViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
+    onShowSnackbar: suspend (String) -> Unit,
 ) {
     // Collect the UI state in a life cycle aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -76,7 +78,8 @@ internal fun GitHubUserDetailRoute(
         modifier = modifier,
         uiState = uiState,
         onBackClick = onBackClick,
-        loadMore = viewModel::loadMore
+        loadMore = viewModel::loadMore,
+        onShowSnackbar = onShowSnackbar,
     )
 }
 
@@ -86,7 +89,8 @@ private fun GitHubUserDetailScreen(
     modifier: Modifier = Modifier,
     uiState: GitHubUserDetailUiState,
     onBackClick: () -> Unit,
-    loadMore: () -> Unit
+    loadMore: () -> Unit,
+    onShowSnackbar: suspend (String) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         var title by remember { mutableStateOf("") }
@@ -128,6 +132,12 @@ private fun GitHubUserDetailScreen(
                         }
                     )
 
+                    uiState.error?.let {
+                        val errorMessage = it.toErrorMessage()
+                        LaunchedEffect(errorMessage) {
+                            onShowSnackbar(errorMessage)
+                        }
+                    }
                 }
             }
         }
@@ -191,7 +201,6 @@ private fun UserInfoItem(user: GitHubUserDetail) {
             AsyncImage(
                 model = user.avatarUrl,
                 contentDescription = stringResource(R.string.cd_github_user_avatar_image),
-                // FIXME: Fix placeholder
                 placeholder = rememberVectorPainter(image = Icons.Default.Person),
                 modifier = Modifier
                     .size(64.dp)
@@ -246,7 +255,7 @@ private fun UserInfoItem(user: GitHubUserDetail) {
 }
 
 @Composable
-private fun UserRepoItem(repo: GitHubRepo, onRepoClick: () -> Unit) {
+private fun UserRepoItem(repo: GitHubUserRepo, onRepoClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -299,7 +308,12 @@ private class GitHubUserDetailUiStateProvider : PreviewParameterProvider<GitHubU
 @Composable
 private fun GitHubUserDetailScreenPreview(@PreviewParameter(GitHubUserDetailUiStateProvider::class) uiState: GitHubUserDetailUiState) {
     ExploreGitHubAndroidTheme {
-        GitHubUserDetailScreen(uiState = uiState, onBackClick = {}, loadMore = {})
+        GitHubUserDetailScreen(
+            uiState = uiState,
+            onBackClick = {},
+            loadMore = {},
+            onShowSnackbar = {},
+        )
     }
 }
 

@@ -1,7 +1,7 @@
 package co.binary.exploregithubandroid.core.data.di
 
-import co.binary.exploregithubandroid.core.data.repository.GitHubUserRepositoryImpl
-import co.binary.exploregithubandroid.core.repository.GitHubUserRepository
+import co.binary.exploregithubandroid.core.data.user.repository.GitHubUserRepositoryImpl
+import co.binary.exploregithubandroid.core.repository.user.GitHubUserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

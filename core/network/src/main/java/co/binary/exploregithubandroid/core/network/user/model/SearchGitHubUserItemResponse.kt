@@ -1,4 +1,4 @@
-package co.binary.exploregithubandroid.core.network.model
+package co.binary.exploregithubandroid.core.network.user.model
 
 
 import kotlinx.serialization.SerialName
@@ -10,8 +10,6 @@ data class SearchGitHubUserItemResponse(
     val login: String,
     @SerialName("id")
     val id: Int,
-    @SerialName("node_id")
-    val nodeId: String,
     @SerialName("avatar_url")
     val avatarUrl: String,
 )

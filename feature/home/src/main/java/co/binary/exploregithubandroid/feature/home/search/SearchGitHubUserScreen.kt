@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,19 +42,21 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.binary.exploregithubandroid.core.model.GitHubUser
-import co.binary.exploregithubandroid.core.model.dummyUsers
+import co.binary.exploregithubandroid.core.model.user.GitHubUser
+import co.binary.exploregithubandroid.core.model.user.dummyUsers
 import co.binary.exploregithubandroid.core.ui.DevicePreview
 import co.binary.exploregithubandroid.core.ui.component.EndlessLazyColumn
 import co.binary.exploregithubandroid.core.ui.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.feature.home.R
 import coil.compose.AsyncImage
+import java.net.UnknownHostException
 
 @Composable
 internal fun SearchGitHubUserRoute(
     modifier: Modifier = Modifier,
     viewModel: SearchGitHubUserViewModel = hiltViewModel(),
     goToUserDetail: (username: String) -> Unit,
+    onShowSnackbar: suspend (String) -> Unit,
 ) {
     // Collect the UI state in a life cycle aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,16 +67,18 @@ internal fun SearchGitHubUserRoute(
         onSearch = viewModel::search,
         onUserClick = goToUserDetail,
         loadMore = viewModel::loadMore,
+        onShowSnackbar = onShowSnackbar,
     )
 }
 
 @Composable
 private fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
-    uiState: SearchGitHubUsersUiState,
+    uiState: SearchGitHubUserUiState,
     onSearch: (searchText: String) -> Unit,
     onUserClick: (username: String) -> Unit,
     loadMore: () -> Unit,
+    onShowSnackbar: suspend (String) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -85,15 +90,20 @@ private fun SearchGitHubUserScreen(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
             value = searchText,
             onValueChange = { searchText = it },
-            placeholder = { Text("Search GitHub users") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search icon") },
+            placeholder = { Text(stringResource(R.string.search_github_users_hint)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search_github_users_hint)
+                )
+            },
             trailingIcon = {
                 if (searchText.isNotEmpty()) {
                     IconButton(onClick = { searchText = "" }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear search text")
+                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search_text))
                     }
                 }
             },
@@ -115,23 +125,32 @@ private fun SearchGitHubUserScreen(
             contentAlignment = Alignment.Center,
         ) {
             when (uiState) {
-                is SearchGitHubUsersUiState.Initial -> {
-                    Text("Search and explore GitHub users", style = MaterialTheme.typography.bodyLarge)
+                is SearchGitHubUserUiState.Initial -> {
+                    Text(
+                        stringResource(R.string.search_github_user_intro_message),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
 
-                is SearchGitHubUsersUiState.Empty -> {
-                    Text("No users found", style = MaterialTheme.typography.bodyLarge)
+                is SearchGitHubUserUiState.Empty -> {
+                    Text(
+                        stringResource(R.string.no_user_found_error_message),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
 
-                is SearchGitHubUsersUiState.Error -> {
-                    Text("Something went wrong. Please try again.", style = MaterialTheme.typography.bodyLarge)
+                is SearchGitHubUserUiState.Error -> {
+                    Text(
+                        stringResource(id = R.string.general_error_message),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
 
-                is SearchGitHubUsersUiState.Loading -> {
+                is SearchGitHubUserUiState.Loading -> {
                     CircularProgressIndicator()
                 }
 
-                is SearchGitHubUsersUiState.Success -> {
+                is SearchGitHubUserUiState.Success -> {
                     UserList(
                         users = uiState.users,
                         shouldLoadMore = uiState.shouldLoadMore,
@@ -139,6 +158,13 @@ private fun SearchGitHubUserScreen(
                         onUserClick = onUserClick,
                         loadMore = loadMore
                     )
+
+                    uiState.error?.let {
+                        val errorMessage = it.toErrorMessage()
+                        LaunchedEffect(errorMessage) {
+                            onShowSnackbar(errorMessage)
+                        }
+                    }
                 }
             }
         }
@@ -190,7 +216,6 @@ private fun UserItem(
         AsyncImage(
             model = user.avatarUrl,
             contentDescription = stringResource(id = R.string.cd_github_user_avatar_image),
-            // FIXME: Fix placeholder
             placeholder = rememberVectorPainter(image = Icons.Default.Person),
             modifier = Modifier
                 .size(56.dp)
@@ -213,30 +238,44 @@ internal fun LoadingItem() {
     }
 }
 
-private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUsersUiState> {
-    override val values: Sequence<SearchGitHubUsersUiState> = sequenceOf(
-        SearchGitHubUsersUiState.Success(
+private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUserUiState> {
+    override val values: Sequence<SearchGitHubUserUiState> = sequenceOf(
+        SearchGitHubUserUiState.Success(
             searchText = "",
             users = dummyUsers,
             shouldLoadMore = true,
             loadingMore = false
         ),
-        SearchGitHubUsersUiState.Initial(),
-        SearchGitHubUsersUiState.Empty(),
-        SearchGitHubUsersUiState.Error(),
-        SearchGitHubUsersUiState.Loading(),
+        SearchGitHubUserUiState.Initial(),
+        SearchGitHubUserUiState.Empty(),
+        SearchGitHubUserUiState.Error(),
+        SearchGitHubUserUiState.Loading(),
     )
 }
 
 @DevicePreview
 @Composable
-private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiStateProvider::class) uiState: SearchGitHubUsersUiState) {
+private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiStateProvider::class) uiState: SearchGitHubUserUiState) {
     ExploreGitHubAndroidTheme {
         SearchGitHubUserScreen(
             uiState = uiState,
             onSearch = {},
             onUserClick = {},
             loadMore = {},
+            onShowSnackbar = {},
         )
+    }
+}
+
+@Composable
+internal fun Throwable.toErrorMessage(): String {
+    return when (this) {
+        is UnknownHostException -> {
+            stringResource(id = R.string.network_error_message)
+        }
+
+        else -> {
+            localizedMessage ?: stringResource(id = R.string.general_error_message)
+        }
     }
 }

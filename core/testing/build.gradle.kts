@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "co.binary.exploregithubandroid.core.ui"
+    namespace = "co.binary.exploregithubandroid.core.testing"
     compileSdk = 34
 
     defaultConfig {
@@ -27,28 +27,14 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
-    }
 }
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
-
-    api(platform(libs.androidx.compose.bom))
-    api(libs.androidx.ui)
-    api(libs.androidx.ui.graphics)
-    api(libs.androidx.ui.tooling.preview)
-    api(libs.androidx.material3)
-
-    debugApi(libs.androidx.ui.tooling)
-    debugApi(libs.androidx.ui.test.manifest)
-
-    testImplementation(project(":core:testing"))
-
-    androidTestImplementation(project(":core:testing"))
+    api(libs.junit)
+    api(libs.androidx.junit)
+    api(libs.androidx.espresso.core)
+    api(libs.google.truth)
+    api(libs.mockk)
+    api(libs.kotlinx.coroutines.test)
 }

@@ -10,4 +10,6 @@ java {
 
 dependencies {
     implementation(libs.java.inject)
+
+    testImplementation(libs.junit)
 }

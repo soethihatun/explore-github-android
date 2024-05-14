@@ -47,6 +47,17 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    packaging {
+        resources {
+            listOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/LICENSE.md",
+                "/META-INF/LICENSE-notice.md",
+            ).forEach {
+                excludes.add(it)
+            }
+        }
+    }
 }
 
 dependencies {
@@ -69,16 +80,17 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    // region Unit testing
+    testImplementation(project(":core:testing"))
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
+    // endregion
 
+    // region Instrumented testing
+    androidTestImplementation(project(":core:testing"))
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.compiler)
 
-    testImplementation(libs.junit)
-
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
 }

@@ -35,6 +35,17 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
     }
+    packaging {
+        resources {
+            listOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/LICENSE.md",
+                "/META-INF/LICENSE-notice.md",
+            ).forEach {
+                excludes.add(it)
+            }
+        }
+    }
 }
 
 dependencies {
@@ -60,7 +71,11 @@ dependencies {
 
     implementation(libs.androidx.browser)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.mockk)
+
+    testImplementation(project(":core:testing"))
+
+    androidTestImplementation(project(":core:testing"))
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
 }

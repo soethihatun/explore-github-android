@@ -43,19 +43,25 @@ private data class SearchGitHubUserViewModelState(
     val loadingMore: Boolean = false,
     val allLoaded: Boolean = false,
 ) {
-    // FIXME: Fix states later
+    fun clearPrevSearchState() = copy(
+        users = emptyList(),
+        error = false,
+        page = 1,
+        allLoaded = false,
+    )
+
     fun toUiState(): SearchGitHubUsersUiState = when {
+        searchText.isEmpty() -> SearchGitHubUsersUiState.Initial(searchText)
         loading -> SearchGitHubUsersUiState.Loading(searchText)
-        users.isNotEmpty() -> SearchGitHubUsersUiState.Success(
+        users.isEmpty() && error -> SearchGitHubUsersUiState.Error(searchText)
+        users.isEmpty() && searchText.isNotEmpty() -> SearchGitHubUsersUiState.Empty(searchText)
+        else -> SearchGitHubUsersUiState.Success(
             searchText = searchText,
             users = users,
             shouldLoadMore = !allLoaded,
             loadingMore = loadingMore,
             error = error,
         )
-
-        error -> SearchGitHubUsersUiState.Error(searchText)
-        else -> SearchGitHubUsersUiState.Initial(searchText)
     }
 }
 
@@ -71,16 +77,20 @@ internal class SearchGitHubUserViewModel @Inject constructor(
         .map { it.toUiState() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SearchGitHubUserViewModelState().toUiState())
 
-    fun search() {
+    fun search(searchText: String) {
         viewModelScope.launch {
+            // Validate input
+            val text = searchText.trim()
+            // If empty, no need to search. Clear the list and return
+            if (text.isEmpty()) {
+                viewModelState.update {
+                    it.clearPrevSearchState().copy(searchText = "")
+                }
+                return@launch
+            }
+
             viewModelState.update {
-                it.copy(
-                    loading = true,
-                    users = emptyList(),
-                    error = false,
-                    page = 1,
-                    allLoaded = false,
-                )
+                it.clearPrevSearchState().copy(loading = true, searchText = text)
             }
             val state = viewModelState.value
             searchGitHubUserUseCase(state.searchText, state.page).fold(
@@ -123,13 +133,5 @@ internal class SearchGitHubUserViewModel @Inject constructor(
                 }
             )
         }
-    }
-
-    fun updateSearchText(text: String) {
-        viewModelState.update { it.copy(searchText = text) }
-    }
-
-    fun clearSearchText() {
-        viewModelState.update { it.copy(searchText = "") }
     }
 }

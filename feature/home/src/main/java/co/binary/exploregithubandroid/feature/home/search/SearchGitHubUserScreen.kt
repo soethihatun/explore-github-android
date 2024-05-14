@@ -26,6 +26,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,9 +62,7 @@ internal fun SearchGitHubUserRoute(
     SearchGitHubUserScreen(
         modifier = modifier,
         uiState = uiState,
-        onSearchTextChange = viewModel::updateSearchText,
         onSearch = viewModel::search,
-        onClearSearchText = viewModel::clearSearchText,
         onUserClick = goToUserDetail,
         loadMore = viewModel::loadMore,
     )
@@ -71,9 +72,7 @@ internal fun SearchGitHubUserRoute(
 private fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
     uiState: SearchGitHubUsersUiState,
-    onSearchTextChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onClearSearchText: () -> Unit,
+    onSearch: (searchText: String) -> Unit,
     onUserClick: (username: String) -> Unit,
     loadMore: () -> Unit,
 ) {
@@ -81,17 +80,22 @@ private fun SearchGitHubUserScreen(
         val keyboardController = LocalSoftwareKeyboardController.current
         val focusManager = LocalFocusManager.current
 
+        // Remember the search text during configuration changes
+        var searchText by rememberSaveable { mutableStateOf("") }
+
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            value = uiState.searchText,
-            onValueChange = onSearchTextChange,
+            value = searchText,
+            onValueChange = { searchText = it },
             placeholder = { Text("Search GitHub users") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search icon") },
             trailingIcon = {
-                IconButton(onClick = onClearSearchText) {
-                    Icon(Icons.Default.Clear, contentDescription = "Clear search text")
+                if (searchText.isNotEmpty()) {
+                    IconButton(onClick = { searchText = "" }) {
+                        Icon(Icons.Default.Clear, contentDescription = "Clear search text")
+                    }
                 }
             },
             singleLine = true,
@@ -100,7 +104,7 @@ private fun SearchGitHubUserScreen(
                 onSearch = {
                     keyboardController?.hide()
                     focusManager.clearFocus()
-                    onSearch()
+                    onSearch(searchText)
                 }
             ),
         )
@@ -232,9 +236,7 @@ private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiSt
     ExploreGitHubAndroidTheme {
         SearchGitHubUserScreen(
             uiState = uiState,
-            onSearchTextChange = {},
             onSearch = {},
-            onClearSearchText = {},
             onUserClick = {},
             loadMore = {},
         )

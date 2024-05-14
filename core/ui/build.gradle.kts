@@ -1,12 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.dagger.hilt)
-    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "co.binary.exploregithubandroid.feature.home"
+    namespace = "co.binary.exploregithubandroid.core.ui"
     compileSdk = 34
 
     defaultConfig {
@@ -39,28 +37,21 @@ android {
 
 dependencies {
 
-    implementation(project(":core:ui"))
-    implementation(project(":core:domain"))
-    implementation(project(":core:model"))
-    implementation(project(":core:common"))
-
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewModel.compose)
 
-    implementation(libs.navigation.compose)
+    api(platform(libs.androidx.compose.bom))
+    api(libs.androidx.ui)
+    api(libs.androidx.ui.graphics)
+    api(libs.androidx.ui.tooling.preview)
+    api(libs.androidx.material3)
 
-    implementation(libs.coil.kt.compose)
-
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-
-    implementation(libs.hilt.navigation.compose)
-
-    implementation(libs.androidx.browser)
+    debugApi(libs.androidx.ui.tooling)
+    debugApi(libs.androidx.ui.test.manifest)
 
     testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
 }

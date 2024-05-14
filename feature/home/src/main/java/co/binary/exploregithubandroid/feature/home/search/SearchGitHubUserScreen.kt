@@ -41,11 +41,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.binary.exploregithubandroid.core.designsystem.DevicePreview
-import co.binary.exploregithubandroid.core.designsystem.EndlessLazyColumn
-import co.binary.exploregithubandroid.core.designsystem.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.core.model.GitHubUser
 import co.binary.exploregithubandroid.core.model.dummyUsers
+import co.binary.exploregithubandroid.core.ui.DevicePreview
+import co.binary.exploregithubandroid.core.ui.component.EndlessLazyColumn
+import co.binary.exploregithubandroid.core.ui.theme.ExploreGitHubAndroidTheme
 import co.binary.exploregithubandroid.feature.home.R
 import coil.compose.AsyncImage
 

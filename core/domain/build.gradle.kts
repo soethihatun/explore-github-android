@@ -13,4 +13,5 @@ dependencies {
     implementation(project(":core:repository"))
 
     implementation(libs.java.inject)
+    implementation(libs.kotlinx.coroutines.core)
 }

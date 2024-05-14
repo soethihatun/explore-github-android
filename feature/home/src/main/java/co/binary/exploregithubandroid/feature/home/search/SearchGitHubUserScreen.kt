@@ -36,14 +36,14 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.model.user.GitHubUser
-import co.binary.exploregithubandroid.core.model.user.dummyUsers
 import co.binary.exploregithubandroid.core.ui.DevicePreview
 import co.binary.exploregithubandroid.core.ui.component.EndlessLazyColumn
 import co.binary.exploregithubandroid.core.ui.theme.ExploreGitHubAndroidTheme
@@ -72,7 +72,7 @@ internal fun SearchGitHubUserRoute(
 }
 
 @Composable
-private fun SearchGitHubUserScreen(
+internal fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
     uiState: SearchGitHubUserUiState,
     onSearch: (searchText: String) -> Unit,
@@ -141,13 +141,14 @@ private fun SearchGitHubUserScreen(
 
                 is SearchGitHubUserUiState.Error -> {
                     Text(
-                        stringResource(id = R.string.general_error_message),
+                        uiState.error.toErrorMessage(),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
 
                 is SearchGitHubUserUiState.Loading -> {
-                    CircularProgressIndicator()
+                    val cd = stringResource(R.string.cd_loading)
+                    CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = cd })
                 }
 
                 is SearchGitHubUserUiState.Success -> {
@@ -238,21 +239,6 @@ internal fun LoadingItem() {
     }
 }
 
-private class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUserUiState> {
-    override val values: Sequence<SearchGitHubUserUiState> = sequenceOf(
-        SearchGitHubUserUiState.Success(
-            searchText = "",
-            users = dummyUsers,
-            shouldLoadMore = true,
-            loadingMore = false
-        ),
-        SearchGitHubUserUiState.Initial(),
-        SearchGitHubUserUiState.Empty(),
-        SearchGitHubUserUiState.Error(),
-        SearchGitHubUserUiState.Loading(),
-    )
-}
-
 @DevicePreview
 @Composable
 private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiStateProvider::class) uiState: SearchGitHubUserUiState) {
@@ -267,6 +253,9 @@ private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiSt
     }
 }
 
+/**
+ * Map to user friendly error message. Move to ui module when other modules require.
+ */
 @Composable
 internal fun Throwable.toErrorMessage(): String {
     return when (this) {

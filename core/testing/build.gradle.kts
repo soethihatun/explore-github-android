@@ -31,6 +31,9 @@ android {
 
 dependencies {
 
+    implementation(project(":core:model"))
+    api(project(":core:repository"))
+
     api(libs.junit)
     api(libs.androidx.junit)
     api(libs.androidx.espresso.core)

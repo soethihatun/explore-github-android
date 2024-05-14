@@ -1,6 +1,5 @@
 package co.binary.exploregithubandroid.feature.home.detail
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -29,8 +28,6 @@ sealed interface GitHubUserDetailUiState {
     data object Error : GitHubUserDetailUiState
 }
 
-private const val TAG = "GitHubUserDetailViewModel"
-
 @HiltViewModel
 internal class GitHubUserDetailViewModel @Inject constructor(
     private val getGitHubUserDetailUseCase: GetGitHubUserDetailUseCase,
@@ -55,7 +52,6 @@ internal class GitHubUserDetailViewModel @Inject constructor(
                     GitHubUserDetailUiState.Success(user = data, page = page)
                 },
                 onFailure = {
-                    Log.e(TAG, "getGitHubUserDetail: ", it)
                     GitHubUserDetailUiState.Error
                 }
             ).let { newState ->
@@ -79,7 +75,6 @@ internal class GitHubUserDetailViewModel @Inject constructor(
                     }
                 },
                 onFailure = { throwable ->
-                    Log.e(TAG, "loadMore: ", throwable)
                     state.copy(error = throwable)
                 }
             ).let { newState ->

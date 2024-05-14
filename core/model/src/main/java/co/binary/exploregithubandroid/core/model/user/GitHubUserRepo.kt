@@ -8,19 +8,3 @@ data class GitHubUserRepo(
     val htmlUrl: String,
     val stargazersCount: Int,
 )
-
-// TODO: delete later
-val dummyRepo = GitHubUserRepo(
-    id = 1,
-    name = "Lorem Ipsum Repo",
-    description = "Lorem Ipsum description",
-    primaryLanguage = "Kotlin",
-    htmlUrl = "https://github.com/JetBrains/kotlin",
-    stargazersCount = 1,
-)
-
-val dummyRepos = listOf(
-    dummyRepo,
-    dummyRepo.copy(id = 2),
-    dummyRepo.copy(id = 3),
-)

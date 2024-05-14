@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,17 +44,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.binary.exploregithubandroid.core.model.user.GitHubUserDetail
 import co.binary.exploregithubandroid.core.model.user.GitHubUserRepo
-import co.binary.exploregithubandroid.core.model.user.dummyUserDetail
 import co.binary.exploregithubandroid.core.ui.DevicePreview
 import co.binary.exploregithubandroid.core.ui.component.EndlessLazyColumn
 import co.binary.exploregithubandroid.core.ui.component.ExploreGitHubTopAppBar
@@ -85,7 +86,7 @@ internal fun GitHubUserDetailRoute(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun GitHubUserDetailScreen(
+internal fun GitHubUserDetailScreen(
     modifier: Modifier = Modifier,
     uiState: GitHubUserDetailUiState,
     onBackClick: () -> Unit,
@@ -109,7 +110,8 @@ private fun GitHubUserDetailScreen(
                 }
 
                 GitHubUserDetailUiState.Loading -> {
-                    CircularProgressIndicator()
+                    val cd = stringResource(R.string.cd_loading)
+                    CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = cd })
                 }
 
                 is GitHubUserDetailUiState.Success -> {
@@ -172,6 +174,7 @@ private fun GitHubUserDetailContent(
             UserInfoItem(user)
         },
         itemContent = { repo ->
+            HorizontalDivider()
             UserRepoItem(repo, onRepoClick = { onRepoClick(repo.htmlUrl) })
         },
         loading = loadingMore,
@@ -260,12 +263,17 @@ private fun UserRepoItem(repo: GitHubUserRepo, onRepoClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onRepoClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Text(repo.name, style = MaterialTheme.typography.titleSmall)
 
+        repo.primaryLanguage?.let {
+            Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+        }
+
         Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(
+                modifier = Modifier.height(IntrinsicSize.Min),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -275,12 +283,6 @@ private fun UserRepoItem(repo: GitHubUserRepo, onRepoClick: () -> Unit) {
                     tint = Color.Green,
                 )
                 Text(repo.stargazersCount.toString(), style = MaterialTheme.typography.bodyMedium)
-            }
-
-            repo.primaryLanguage?.let {
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(it, style = MaterialTheme.typography.bodyMedium)
             }
         }
 
@@ -296,14 +298,6 @@ private fun UserRepoItem(repo: GitHubUserRepo, onRepoClick: () -> Unit) {
     }
 }
 
-private class GitHubUserDetailUiStateProvider : PreviewParameterProvider<GitHubUserDetailUiState> {
-    override val values: Sequence<GitHubUserDetailUiState> = sequenceOf(
-        GitHubUserDetailUiState.Success(dummyUserDetail, 1),
-        GitHubUserDetailUiState.Loading,
-        GitHubUserDetailUiState.Error,
-    )
-}
-
 @DevicePreview
 @Composable
 private fun GitHubUserDetailScreenPreview(@PreviewParameter(GitHubUserDetailUiStateProvider::class) uiState: GitHubUserDetailUiState) {
@@ -317,6 +311,9 @@ private fun GitHubUserDetailScreenPreview(@PreviewParameter(GitHubUserDetailUiSt
     }
 }
 
+/**
+ * Launch a custom tab with the given URL. Since it requires browser dependency, Move to ui module when other modules require later.
+ */
 private fun Context.launchCustomTabs(url: String) {
     CustomTabsIntent.Builder().build().launchUrl(this, url.toUri())
 }

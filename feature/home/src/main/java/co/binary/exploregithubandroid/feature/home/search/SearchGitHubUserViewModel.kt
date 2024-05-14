@@ -1,6 +1,5 @@
 package co.binary.exploregithubandroid.feature.home.search
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.binary.exploregithubandroid.core.domain.user.SearchGitHubUsersUseCase
@@ -31,7 +30,7 @@ sealed interface SearchGitHubUserUiState {
 
     data class Empty(override val searchText: String = "") : SearchGitHubUserUiState
 
-    data class Error(override val searchText: String = "") : SearchGitHubUserUiState
+    data class Error(override val searchText: String = "", val error: Throwable) : SearchGitHubUserUiState
 }
 
 private data class SearchGitHubUserViewModelState(
@@ -53,7 +52,7 @@ private data class SearchGitHubUserViewModelState(
     fun toUiState(): SearchGitHubUserUiState = when {
         searchText.isEmpty() -> SearchGitHubUserUiState.Initial(searchText)
         loading -> SearchGitHubUserUiState.Loading(searchText)
-        users.isEmpty() && error != null -> SearchGitHubUserUiState.Error(searchText)
+        users.isEmpty() && error != null -> SearchGitHubUserUiState.Error(searchText, error)
         users.isEmpty() && searchText.isNotEmpty() -> SearchGitHubUserUiState.Empty(searchText)
         else -> SearchGitHubUserUiState.Success(
             searchText = searchText,
@@ -64,8 +63,6 @@ private data class SearchGitHubUserViewModelState(
         )
     }
 }
-
-private const val TAG = "SearchGitHubUserViewModel"
 
 @HiltViewModel
 internal class SearchGitHubUserViewModel @Inject constructor(
@@ -95,11 +92,9 @@ internal class SearchGitHubUserViewModel @Inject constructor(
             val state = viewModelState.value
             searchGitHubUserUseCase(state.searchText, state.page).fold(
                 onSuccess = { data ->
-                    Log.d(TAG, "search: success")
                     viewModelState.update { it.copy(loading = false, users = data) }
                 },
                 onFailure = { throwable ->
-                    Log.e(TAG, "search: error", throwable)
                     viewModelState.update { it.copy(loading = false, error = throwable) }
                 }
             )
@@ -113,7 +108,6 @@ internal class SearchGitHubUserViewModel @Inject constructor(
             val newPage = state.page + 1
             searchGitHubUserUseCase(state.searchText, newPage).fold(
                 onSuccess = { newData ->
-                    Log.d(TAG, "loadMore: success")
                     if (newData.isEmpty()) {
                         // No more data
                         viewModelState.update { it.copy(loadingMore = false, allLoaded = true) }
@@ -128,7 +122,6 @@ internal class SearchGitHubUserViewModel @Inject constructor(
                     }
                 },
                 onFailure = { throwable ->
-                    Log.d(TAG, "loadMore: error")
                     viewModelState.update { it.copy(loadingMore = false, error = throwable) }
                 }
             )

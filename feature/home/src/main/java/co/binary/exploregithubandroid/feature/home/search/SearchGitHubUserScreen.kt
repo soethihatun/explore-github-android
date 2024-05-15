@@ -269,7 +269,13 @@ private fun RecentSearchList(
                 }
             }
         }
-        items(searchBarUiState.recentSearches) { item ->
+        items(
+            items = searchBarUiState.recentSearches,
+            key = {
+                // Each string is unique and can serve as key
+                it
+            }
+        ) { item ->
             Text(
                 text = item,
                 style = MaterialTheme.typography.bodyLarge,

@@ -8,6 +8,8 @@ A simple Android App to demonstrate the use of modern android development. It ma
 * Custom Tabs to show GitHub Repository
 
 ## Screenshots
+<img width="1488" alt="v0 1 0_screenshot" src="https://github.com/soethihatun/explore-github-android/assets/5600819/dc059f98-6cc6-4698-8a20-45ae8e59d892">
+
 
 ## What's under the hood
 
@@ -36,4 +38,4 @@ A simple Android App to demonstrate the use of modern android development. It ma
 ### Todos
 * Gradle convention plugin
 * Tests on datbase
-* 
+* Refine UI

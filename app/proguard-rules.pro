@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Core Hilt Rules
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+-keep class androidx.hilt.** { *; }

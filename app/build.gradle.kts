@@ -27,6 +27,10 @@ android {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Used the debug signing config to run the release variant.
+            // TODO: Replace this with signing configuration file later
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

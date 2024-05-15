@@ -18,7 +18,7 @@ private val dummyUsers = listOf(
 internal class SearchGitHubUserUiStateProvider : PreviewParameterProvider<SearchGitHubUserUiState> {
     override val values: Sequence<SearchGitHubUserUiState> = sequenceOf(
         SearchGitHubUserUiState.Success(
-            searchText = "",
+            queryText = "",
             users = dummyUsers,
             shouldLoadMore = true,
             loadingMore = false

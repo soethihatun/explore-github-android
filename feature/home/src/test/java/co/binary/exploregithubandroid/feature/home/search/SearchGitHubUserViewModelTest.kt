@@ -1,14 +1,20 @@
 package co.binary.exploregithubandroid.feature.home.search
 
+import co.binary.exploregithubandroid.core.domain.user.ClearRecentSearchUseCase
+import co.binary.exploregithubandroid.core.domain.user.GetRecentSearchStreamUseCase
+import co.binary.exploregithubandroid.core.domain.user.InsertOrReplaceRecentSearchUseCase
 import co.binary.exploregithubandroid.core.domain.user.SearchGitHubUsersUseCase
 import co.binary.exploregithubandroid.core.repository.user.GitHubUserRepository
+import co.binary.exploregithubandroid.core.repository.user.RecentSearchRepository
 import co.binary.exploregithubandroid.core.testing.data.gitHubUserTestData
 import co.binary.exploregithubandroid.core.testing.util.MainDispatcherRule
 import com.google.common.truth.Truth
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -24,7 +30,8 @@ class SearchGitHubUserViewModelTest {
 
     private lateinit var viewModel: SearchGitHubUserViewModel
 
-    private lateinit var repository: GitHubUserRepository
+    private lateinit var userRepository: GitHubUserRepository
+    private lateinit var recentRepository: RecentSearchRepository
 
     private val gitHubUsers = gitHubUserTestData
     private val thisUser = gitHubUsers.first()
@@ -34,9 +41,22 @@ class SearchGitHubUserViewModelTest {
 
     @Before
     fun setup() {
-        repository = spyk()
-        val searchGitHubUserUseCase = SearchGitHubUsersUseCase(repository, testDispatcher)
-        viewModel = SearchGitHubUserViewModel(searchGitHubUserUseCase = searchGitHubUserUseCase)
+        userRepository = spyk()
+        recentRepository = mockk()
+
+        coEvery { recentRepository.getRecentSearchStream(any()) } returns flowOf(emptyList())
+        coEvery { recentRepository.insertOrReplaceRecentSearch(any()) } returns Unit
+
+        val searchGitHubUserUseCase = SearchGitHubUsersUseCase(userRepository, testDispatcher)
+        val recentSearchStreamUseCase = GetRecentSearchStreamUseCase(recentRepository)
+        val insertOrReplaceRecentSearchUseCase = InsertOrReplaceRecentSearchUseCase(recentRepository, testDispatcher)
+        val clearRecentSearchUseCase = ClearRecentSearchUseCase(recentRepository, testDispatcher)
+        viewModel = SearchGitHubUserViewModel(
+            searchGitHubUserUseCase = searchGitHubUserUseCase,
+            recentSearchStreamUseCase = recentSearchStreamUseCase,
+            insertOrReplaceRecentSearchUseCase = insertOrReplaceRecentSearchUseCase,
+            clearRecentSearchUseCase = clearRecentSearchUseCase,
+        )
     }
 
     @Test
@@ -51,7 +71,7 @@ class SearchGitHubUserViewModelTest {
 
         val actual = viewModel.uiState.value
         Truth.assertThat(actual).isEqualTo(SearchGitHubUserUiState.Initial())
-        coVerify(exactly = 0) { repository.searchGitHubUsers(any(), any()) }
+        coVerify(exactly = 0) { userRepository.searchGitHubUsers(any(), any()) }
     }
 
     @Test
@@ -60,21 +80,22 @@ class SearchGitHubUserViewModelTest {
 
         val actual = viewModel.uiState.value
         Truth.assertThat(actual).isEqualTo(SearchGitHubUserUiState.Initial())
-        coVerify(exactly = 0) { repository.searchGitHubUsers(any(), any()) }
+        coVerify(exactly = 0) { userRepository.searchGitHubUsers(any(), any()) }
     }
 
     @Test
     fun when_search_returns_error_then_it_should_show_error() {
-        coEvery { repository.searchGitHubUsers(any(), any()) } returns Result.failure(Exception("Error"))
+        val error = Exception("Error")
+        coEvery { userRepository.searchGitHubUsers(any(), any()) } returns Result.failure(error)
         viewModel.search(thisUser.username)
 
         val actual = viewModel.uiState.value
-        Truth.assertThat(actual).isEqualTo(SearchGitHubUserUiState.Error(thisUser.username))
+        Truth.assertThat(actual).isEqualTo(SearchGitHubUserUiState.Error(thisUser.username, error))
     }
 
     @Test
     fun when_search_returns_empty_data_then_it_should_show_empty() {
-        coEvery { repository.searchGitHubUsers(any(), any()) } returns Result.success(emptyList())
+        coEvery { userRepository.searchGitHubUsers(any(), any()) } returns Result.success(emptyList())
 
         viewModel.search(thisUser.username)
 
@@ -84,14 +105,14 @@ class SearchGitHubUserViewModelTest {
 
     @Test
     fun when_search_returns_data_then_it_should_show_data() {
-        coEvery { repository.searchGitHubUsers(any(), any()) } returns Result.success(listOf(thisUser))
+        coEvery { userRepository.searchGitHubUsers(any(), any()) } returns Result.success(listOf(thisUser))
 
         viewModel.search(thisUser.username)
 
         val actual = viewModel.uiState.value
         Truth.assertThat(actual).isEqualTo(
             SearchGitHubUserUiState.Success(
-                searchText = thisUser.username,
+                queryText = thisUser.username,
                 users = listOf(thisUser),
                 shouldLoadMore = true,
                 loadingMore = false,
@@ -102,8 +123,8 @@ class SearchGitHubUserViewModelTest {
 
     @Test
     fun when_loadMore_returns_error_then_it_should_show_error() {
-        coEvery { repository.searchGitHubUsers(any(), 1) } returns Result.success(listOf(thisUser))
-        coEvery { repository.searchGitHubUsers(any(), 2) } returns Result.failure(Exception("Error"))
+        coEvery { userRepository.searchGitHubUsers(any(), 1) } returns Result.success(listOf(thisUser))
+        coEvery { userRepository.searchGitHubUsers(any(), 2) } returns Result.failure(Exception("Error"))
 
         viewModel.search(thisUser.username)
         val prev = viewModel.uiState.value as SearchGitHubUserUiState.Success
@@ -120,8 +141,8 @@ class SearchGitHubUserViewModelTest {
 
     @Test
     fun when_loadMore_returns_data_then_it_should_show_new_data() {
-        coEvery { repository.searchGitHubUsers(any(), 1) } returns Result.success(listOf(thisUser))
-        coEvery { repository.searchGitHubUsers(any(), 2) } returns Result.success(listOf(otherUser))
+        coEvery { userRepository.searchGitHubUsers(any(), 1) } returns Result.success(listOf(thisUser))
+        coEvery { userRepository.searchGitHubUsers(any(), 2) } returns Result.success(listOf(otherUser))
 
         viewModel.search(thisUser.username)
         val prev = viewModel.uiState.value as SearchGitHubUserUiState.Success
@@ -136,8 +157,8 @@ class SearchGitHubUserViewModelTest {
 
     @Test
     fun when_loadMore_returns_no_more_data_then_it_should_stop_loading() {
-        coEvery { repository.searchGitHubUsers(any(), 1) } returns Result.success(listOf(thisUser))
-        coEvery { repository.searchGitHubUsers(any(), 2) } returns Result.success(emptyList())
+        coEvery { userRepository.searchGitHubUsers(any(), 1) } returns Result.success(listOf(thisUser))
+        coEvery { userRepository.searchGitHubUsers(any(), 2) } returns Result.success(emptyList())
 
         viewModel.search(thisUser.username)
         val prev = viewModel.uiState.value as SearchGitHubUserUiState.Success

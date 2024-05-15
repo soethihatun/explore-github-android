@@ -10,35 +10,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -60,14 +56,20 @@ internal fun SearchGitHubUserRoute(
 ) {
     // Collect the UI state in a life cycle aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val searchBarUiState by viewModel.searchBarUiState.collectAsStateWithLifecycle()
 
     SearchGitHubUserScreen(
         modifier = modifier,
         uiState = uiState,
+        searchBarUiState = searchBarUiState,
+        onToggleSearch = viewModel::toggleSearch,
+        onSearchTextChange = viewModel::updateSearchText,
+        onClearSearchText = viewModel::clearSearchText,
         onSearch = viewModel::search,
+        onShowSnackbar = onShowSnackbar,
+        onClearSearches = viewModel::clearRecentSearches,
         onUserClick = goToUserDetail,
         loadMore = viewModel::loadMore,
-        onShowSnackbar = onShowSnackbar,
     )
 }
 
@@ -75,47 +77,34 @@ internal fun SearchGitHubUserRoute(
 internal fun SearchGitHubUserScreen(
     modifier: Modifier = Modifier,
     uiState: SearchGitHubUserUiState,
+    searchBarUiState: SearchBarUiState,
+    onToggleSearch: () -> Unit,
+    onSearchTextChange: (searchText: String) -> Unit,
     onSearch: (searchText: String) -> Unit,
+    onClearSearchText: () -> Unit,
+    onClearSearches: () -> Unit,
     onUserClick: (username: String) -> Unit,
     loadMore: () -> Unit,
     onShowSnackbar: suspend (String) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        val keyboardController = LocalSoftwareKeyboardController.current
-        val focusManager = LocalFocusManager.current
+        val searchBarPadding =
+            if (searchBarUiState.isSearching) PaddingValues(0.dp) else PaddingValues(
+                horizontal = 16.dp,
+                vertical = 8.dp
+            )
 
-        // Remember the search text during configuration changes
-        var searchText by rememberSaveable { mutableStateOf("") }
-
-        OutlinedTextField(
+        UserSearchBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-            value = searchText,
-            onValueChange = { searchText = it },
-            placeholder = { Text(stringResource(R.string.search_github_users_hint)) },
-            leadingIcon = {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search_github_users_hint)
-                )
-            },
-            trailingIcon = {
-                if (searchText.isNotEmpty()) {
-                    IconButton(onClick = { searchText = "" }) {
-                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search_text))
-                    }
-                }
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    keyboardController?.hide()
-                    focusManager.clearFocus()
-                    onSearch(searchText)
-                }
-            ),
+                .padding(searchBarPadding),
+            searchBarUiState = searchBarUiState,
+            uiState = uiState,
+            onToggleSearch = onToggleSearch,
+            onSearchTextChange = onSearchTextChange,
+            onClearSearchText = onClearSearchText,
+            onSearch = onSearch,
+            onClearSearches = onClearSearches
         )
 
         Box(
@@ -168,6 +157,130 @@ internal fun SearchGitHubUserScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun UserSearchBar(
+    modifier: Modifier = Modifier,
+    searchBarUiState: SearchBarUiState,
+    uiState: SearchGitHubUserUiState,
+    onToggleSearch: () -> Unit,
+    onSearchTextChange: (searchText: String) -> Unit,
+    onClearSearchText: () -> Unit,
+    onSearch: (searchText: String) -> Unit,
+    onClearSearches: () -> Unit
+) {
+    SearchBar(
+        modifier = modifier,
+        query = if (searchBarUiState.isSearching) searchBarUiState.searchBarText else uiState.queryText,
+        onQueryChange = { onSearchTextChange(it) },
+        onSearch = {
+            onSearch(it)
+            onToggleSearch()
+        },
+        active = searchBarUiState.isSearching,
+        onActiveChange = { onToggleSearch() },
+        placeholder = { Text(stringResource(R.string.search_github_users_hint)) },
+        leadingIcon = {
+            if (searchBarUiState.isSearching) {
+                IconButton(onClick = { onToggleSearch() }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.cd_go_back),
+                    )
+                }
+            } else {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search_github_users_hint)
+                )
+            }
+        },
+        trailingIcon = {
+            if (searchBarUiState.isSearching) {
+                if (searchBarUiState.searchBarText.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            onSearchTextChange("")
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = stringResource(R.string.cd_clear_search_text)
+                        )
+                    }
+                }
+            } else {
+                if (uiState.queryText.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            onClearSearchText()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = stringResource(R.string.cd_clear_search_text)
+                        )
+                    }
+                }
+            }
+        },
+    ) {
+        RecentSearchList(
+            modifier = Modifier.fillMaxSize(),
+            searchBarUiState = searchBarUiState,
+            onToggleSearch = onToggleSearch,
+            onSearch = onSearch,
+            onClearSearches = onClearSearches,
+        )
+    }
+}
+
+@Composable
+private fun RecentSearchList(
+    modifier: Modifier = Modifier,
+    searchBarUiState: SearchBarUiState,
+    onToggleSearch: () -> Unit,
+    onSearch: (searchText: String) -> Unit,
+    onClearSearches: () -> Unit,
+) {
+    LazyColumn(modifier = modifier) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.recent_searches_text),
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                IconButton(onClick = onClearSearches, modifier = Modifier.padding(start = 16.dp)) {
+                    Icon(
+                        Icons.Default.Clear,
+                        contentDescription = stringResource(R.string.cd_clear_search_text)
+                    )
+                }
+            }
+        }
+        items(searchBarUiState.recentSearches) { item ->
+            Text(
+                text = item,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        onSearch(item)
+                        onToggleSearch()
+                    }
+                    .padding(16.dp)
+            )
         }
     }
 }
@@ -245,10 +358,38 @@ private fun SearchGitHubUserScreenPreview(@PreviewParameter(SearchGitHubUserUiSt
     ExploreGitHubAndroidTheme {
         SearchGitHubUserScreen(
             uiState = uiState,
+            searchBarUiState = SearchBarUiState(),
             onSearch = {},
+            onClearSearches = {},
             onUserClick = {},
             loadMore = {},
             onShowSnackbar = {},
+            onClearSearchText = {},
+            onToggleSearch = {},
+            onSearchTextChange = {},
+        )
+    }
+}
+
+@DevicePreview
+@Composable
+private fun SearchGitHubUserScreenSearchBarPreview() {
+    ExploreGitHubAndroidTheme {
+        SearchGitHubUserScreen(
+            uiState = SearchGitHubUserUiState.Initial(),
+            searchBarUiState = SearchBarUiState(
+                isSearching = true,
+                searchBarText = "test",
+                recentSearches = listOf("test1", "test2"),
+            ),
+            onSearch = {},
+            onClearSearches = {},
+            onUserClick = {},
+            loadMore = {},
+            onShowSnackbar = {},
+            onClearSearchText = {},
+            onToggleSearch = {},
+            onSearchTextChange = {},
         )
     }
 }

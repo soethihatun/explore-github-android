@@ -5,6 +5,7 @@ import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToNode
@@ -40,10 +41,15 @@ class SearchGitHubUserScreenTest {
             setContent {
                 SearchGitHubUserScreen(
                     uiState = SearchGitHubUserUiState.Initial(),
+                    searchBarUiState = SearchBarUiState(),
+                    onSearch = {},
+                    onClearSearches = {},
+                    onUserClick = {},
                     loadMore = {},
                     onShowSnackbar = {},
-                    onUserClick = {},
-                    onSearch = {},
+                    onClearSearchText = {},
+                    onToggleSearch = {},
+                    onSearchTextChange = {},
                 )
             }
 
@@ -58,10 +64,15 @@ class SearchGitHubUserScreenTest {
             setContent {
                 SearchGitHubUserScreen(
                     uiState = SearchGitHubUserUiState.Loading(),
+                    searchBarUiState = SearchBarUiState(),
+                    onSearch = {},
+                    onClearSearches = {},
+                    onUserClick = {},
                     loadMore = {},
                     onShowSnackbar = {},
-                    onUserClick = {},
-                    onSearch = {},
+                    onClearSearchText = {},
+                    onToggleSearch = {},
+                    onSearchTextChange = {},
                 )
             }
 
@@ -77,10 +88,15 @@ class SearchGitHubUserScreenTest {
             setContent {
                 SearchGitHubUserScreen(
                     uiState = SearchGitHubUserUiState.Error(error = exception),
+                    searchBarUiState = SearchBarUiState(),
+                    onSearch = {},
+                    onClearSearches = {},
+                    onUserClick = {},
                     loadMore = {},
                     onShowSnackbar = {},
-                    onUserClick = {},
-                    onSearch = {},
+                    onClearSearchText = {},
+                    onToggleSearch = {},
+                    onSearchTextChange = {},
                 )
                 errorMessage = exception.toErrorMessage()
             }
@@ -94,11 +110,16 @@ class SearchGitHubUserScreenTest {
         composeTestRule.apply {
             setContent {
                 SearchGitHubUserScreen(
-                    uiState = SearchGitHubUserUiState.Empty(searchText = testData.first().username),
+                    uiState = SearchGitHubUserUiState.Empty(queryText = testData.first().username),
+                    searchBarUiState = SearchBarUiState(),
+                    onSearch = {},
+                    onClearSearches = {},
+                    onUserClick = {},
                     loadMore = {},
                     onShowSnackbar = {},
-                    onUserClick = {},
-                    onSearch = {},
+                    onClearSearchText = {},
+                    onToggleSearch = {},
+                    onSearchTextChange = {},
                 )
             }
 
@@ -114,14 +135,19 @@ class SearchGitHubUserScreenTest {
             setContent {
                 SearchGitHubUserScreen(
                     uiState = SearchGitHubUserUiState.Success(
-                        searchText = testData.first().username,
+                        queryText = testData.first().username,
                         users = testData,
                         shouldLoadMore = true,
                     ),
+                    searchBarUiState = SearchBarUiState(),
+                    onSearch = {},
+                    onClearSearches = {},
+                    onUserClick = {},
                     loadMore = {},
                     onShowSnackbar = {},
-                    onUserClick = {},
-                    onSearch = {},
+                    onClearSearchText = {},
+                    onToggleSearch = {},
+                    onSearchTextChange = {},
                 )
             }
 
@@ -142,15 +168,20 @@ class SearchGitHubUserScreenTest {
             setContent {
                 SearchGitHubUserScreen(
                     uiState = SearchGitHubUserUiState.Success(
-                        searchText = testData.first().username,
+                        queryText = testData.first().username,
                         users = testData,
                         shouldLoadMore = true,
                         error = exception,
                     ),
+                    searchBarUiState = SearchBarUiState(),
+                    onSearch = {},
+                    onClearSearches = {},
+                    onUserClick = {},
                     loadMore = {},
                     onShowSnackbar = { actual = it },
-                    onUserClick = {},
-                    onSearch = {},
+                    onClearSearchText = {},
+                    onToggleSearch = {},
+                    onSearchTextChange = {},
                 )
                 errorMessage = exception.toErrorMessage()
             }
@@ -161,6 +192,45 @@ class SearchGitHubUserScreenTest {
             onAllNodes(hasScrollToNodeAction())
                 .onFirst()
                 .performScrollToNode(hasText(testData.first().username))
+        }
+    }
+
+    @Test
+    fun whenIsSearching_showSearchBar() {
+        composeTestRule.apply {
+            val searchBarText = "searchBarText"
+            val recentSearches = listOf("Item 1", "Item 2")
+            setContent {
+                SearchGitHubUserScreen(
+                    uiState = SearchGitHubUserUiState.Initial(),
+                    searchBarUiState = SearchBarUiState(
+                        isSearching = true,
+                        searchBarText = "searchBarText",
+                        recentSearches = recentSearches,
+                    ),
+                    onSearch = {},
+                    onClearSearches = {},
+                    onUserClick = {},
+                    loadMore = {},
+                    onShowSnackbar = {},
+                    onClearSearchText = {},
+                    onToggleSearch = {},
+                    onSearchTextChange = {},
+                )
+            }
+
+            onNodeWithText(searchBarText).assertExists()
+
+            // Recent searches
+            val recentSearchesText = activity.getString(R.string.recent_searches_text)
+            onAllNodes(hasScrollToNodeAction())
+                .onFirst()
+                .performScrollToNode(hasText(recentSearchesText))
+
+            // Scroll to first item if available
+            onAllNodes(hasScrollToNodeAction())
+                .onLast()
+                .performScrollToNode(hasText(recentSearches.last()))
         }
     }
 }

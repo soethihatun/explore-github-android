@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "co.binary.exploregithubandroid.core.data"
+    namespace = "co.binary.exploregithubandroid.core.local"
     compileSdk = 34
 
     defaultConfig {
@@ -33,14 +33,12 @@ android {
 
 dependencies {
 
-    implementation(project(":core:model"))
-    implementation(project(":core:repository"))
-    implementation(project(":core:common"))
-    implementation(project(":core:network"))
-    implementation(project(":core:local"))
+    implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     testImplementation(project(":core:testing"))
+
+    androidTestImplementation(project(":core:testing"))
 }

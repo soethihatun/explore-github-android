@@ -10,6 +10,13 @@ A simple Android App to demonstrate the use of modern android development. It ma
 ## Screenshots
 <img width="1488" alt="v0 1 0_screenshot" src="https://github.com/soethihatun/explore-github-android/assets/5600819/dc059f98-6cc6-4698-8a20-45ae8e59d892">
 
+## How to run the project
+- Please add [secrets.properties](secrets.properties) file in project's root directory.
+- Get `YOUR TOKEN` from [GitHub API](https://docs.github.com/en).
+```
+GITHUB_ACCESS_TOKEN="YOUR TOKEN"
+GITHUB_BASE_URL="https://api.github.com/"
+```
 
 ## What's under the hood
 

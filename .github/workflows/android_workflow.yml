@@ -18,8 +18,8 @@ jobs:
       - name: Create properties file
         run: |
             touch secrets.properties
-            echo GITHUB_ACCESS_TOKEN=${{ secrets.EXPLORE_GITHUB_ACCESS_TOKEN }} >> secrets.properties
-            echo GITHUB_BASE_URL=${{ secrets.EXPLORE_GITHUB_BASE_URL }} >> secrets.properties
+            echo GITHUB_ACCESS_TOKEN="${{ secrets.EXPLORE_GITHUB_ACCESS_TOKEN }}" >> secrets.properties
+            echo GITHUB_BASE_URL="${{ secrets.EXPLORE_GITHUB_BASE_URL }}" >> secrets.properties
             cat secrets.properties
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest

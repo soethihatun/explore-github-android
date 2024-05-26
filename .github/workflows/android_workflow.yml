@@ -15,7 +15,7 @@ jobs:
           java-version: 17
       - name: Print contents in current directory
         run: ls -la
-      - name: Create properties file
+      - name: Create secrets.properties file
         run: |
             touch secrets.properties
             echo GITHUB_ACCESS_TOKEN=${{ secrets.EXPLORE_GITHUB_ACCESS_TOKEN }} >> secrets.properties

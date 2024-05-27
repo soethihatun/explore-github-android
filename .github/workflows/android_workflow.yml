@@ -8,23 +8,55 @@ jobs:
     steps:
       - name: Checkout current repository in ubuntu's file system
         uses: actions/checkout@v4
+
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 17
-      - name: Print contents in current directory
-        run: ls -la
+
       - name: Create properties file
         run: |
             touch secrets.properties
             echo GITHUB_ACCESS_TOKEN=${{ secrets.EXPLORE_GITHUB_ACCESS_TOKEN }} >> secrets.properties
             echo GITHUB_BASE_URL=${{ secrets.EXPLORE_GITHUB_BASE_URL }} >> secrets.properties
             cat secrets.properties
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
-      - name: Upload Reports
-        uses: actions/upload-artifact@v1
+
+#      - name: Upload Reports
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: reports
+#          path: app/build/reports
+  generate-apk:
+    name: Generate apk
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
-          name: reports
-          path: app/build/reports
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Create properties file
+        run: |
+          touch secrets.properties
+          echo GITHUB_ACCESS_TOKEN=${{ secrets.EXPLORE_GITHUB_ACCESS_TOKEN }} >> secrets.properties
+          echo GITHUB_BASE_URL=${{ secrets.EXPLORE_GITHUB_BASE_URL }} >> secrets.properties
+          cat secrets.properties
+
+      - name: Generate apk
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: app/build/outputs/apk/debug/app-debug.apk
+

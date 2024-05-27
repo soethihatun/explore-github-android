@@ -46,8 +46,8 @@ android {
     val githubBaseUrl = properties.getProperty("GITHUB_BASE_URL")
 
     buildTypes.forEach {
-        it.buildConfigField("String", "GITHUB_ACCESS_TOKEN", accessToken)
-        it.buildConfigField("String", "GITHUB_BASE_URL", githubBaseUrl)
+        it.buildConfigField("String", "GITHUB_ACCESS_TOKEN", "\"$accessToken\"")
+        it.buildConfigField("String", "GITHUB_BASE_URL", "\"$githubBaseUrl\"")
     }
 }
 

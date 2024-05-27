@@ -25,11 +25,25 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
 
+      - name: Run instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86
+          profile: Nexus 6
+          avd-name: test
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: ./gradlew connectedCheck
+
+# TODO: Set up with jacoco later
 #      - name: Upload Reports
 #        uses: actions/upload-artifact@v4
 #        with:
 #          name: reports
 #          path: app/build/reports
+
+
   generate-apk:
     name: Generate apk
     runs-on: ubuntu-latest
@@ -59,4 +73,3 @@ jobs:
         with:
           name: build-output
           path: app/build/outputs/apk/debug/app-debug.apk
-
